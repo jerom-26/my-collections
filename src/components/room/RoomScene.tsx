@@ -31,7 +31,7 @@ function CameraRig({ resetKey }: { resetKey: number }) {
 export default function RoomScene({ evening, resetKey }: { evening: boolean; resetKey: number }) {
   return (
     <>
-      <color attach="background" args={['#e5ddce']} />
+      <color attach="background" args={['#da9921']} />
       <Lighting evening={evening} />
       <ArtworkProvider>
         <Room />
