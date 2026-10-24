@@ -39,6 +39,11 @@ The camera can orbit around the room, with a limited vertical angle to keep it a
 | `src/components/room/Room.tsx` | 8 × 8 floor, staggered planks, two walls, trims, and ground shadow |
 | `src/components/room/Workstation.tsx` | L-shaped desk, monitor/laptop, keyboard/mouse, tower, speakers, drawers, and chair |
 | `src/components/room/Displays.tsx` | Glass-front cabinet, carded display grid, and floating model shelves |
+| `src/types/collectibles.ts` | Collectible metadata, display IDs, and slot assignment types |
+| `src/data/sampleCollectibles.ts` | 35 explicitly labeled sample records with stable IDs and placeholder colors |
+| `src/data/displayAssignments.ts` | Slot-to-record assignments and safe reference resolution |
+| `src/components/room/displayLayout.ts` | Stable physical slot IDs, local transforms, and shared shelf heights |
+| `src/components/room/CollectibleItem.tsx` | Procedural car and carded packaging rendering, independent of inventory lookup |
 | `src/components/room/Decorations.tsx` | Rug, plants, bedside storage/lamp, and small decorative details |
 | `src/components/room/Lighting.tsx` | Ambient/key/accent lights and a locally rendered environment for reflections |
 | `src/components/room/Primitives.tsx` | Reusable box, placeholder diecast car, and plant geometry |
@@ -46,6 +51,32 @@ The camera can orbit around the room, with a limited vertical angle to keep it a
 | `src/components/room/palette.ts` | Shared furniture and architectural colors |
 | `src/App.css`, `src/index.css` | Viewer styling, responsive layout, and global styles |
 | `index.html`, `public/room-mark.svg` | Page metadata and room favicon |
+
+## Collectible records and display slots
+
+The displays now separate **what an item is**, **where it goes**, and **how it is drawn**. The initial data contains 35 sample cars: 8 cabinet cars, 15 carded cars, and 6 cars on each of the two loose-model shelf groups. Their original colors, local positions, scales, and packaging are preserved. The separate decorative car on the workstation is unchanged and is not part of these records.
+
+`Collectible` records contain `id`, `name`, `category`, `manufacturer`, `edition`, `color`, `isSample`, and optional `imageUrl` / `modelUrl` references. Current manufacturer and edition values are explicitly sample metadata, not claims about a real collection. The renderer continues using the existing procedural car; image and model references are metadata only and do not trigger asset downloads.
+
+To add another sample car, add a record to `src/data/sampleCollectibles.ts`, using a new stable ID:
+
+```ts
+{ ...sampleDetails, id: 'sample-car-36', name: 'Sample diecast car 36', color: '#5e8794' },
+```
+
+Then place it by changing an existing slot's value in `src/data/displayAssignments.ts`:
+
+```ts
+'cabinet:shelf-1-left': 'sample-car-36',
+```
+
+The replaced record remains in the catalog but is no longer displayed. Records do not need an assignment. Reordering records does not change their placement, and replacing an assignment does not require editing shelf geometry. Adding more physical capacity is a separate layout change.
+
+Slots have display-prefixed IDs such as `cabinet:shelf-1-left`, `card-wall:row-1-slot-1`, `back-model-shelves:shelf-1-left`, and `left-model-shelves:shelf-1-left`. Shelf numbers run bottom to top; card rows run top to bottom. Keep these IDs when reordering layout configuration or adjusting coordinates. The two loose-model shelf groups have separate prefixes so their IDs never overlap.
+
+Omit an assignment or set it to `null` to empty a slot. A missing record also leaves its slot empty, with a development-console diagnostic. Shelves, cabinet glass, lighting, and card mounting clips remain; an empty card slot has no collectible, backing card, or plastic bubble. Unknown slot references are ignored. Duplicate record IDs keep the first record, and assigning the same record more than once leaves later placements empty. Duplicate physical slot IDs are reported as layout errors. A slot-keyed assignment object permits only one record per slot.
+
+Assignment resolution is a pure function, run once for the static scene data. It returns resolved records and diagnostics without adding React state, persistence, or a backend. `CollectibleItem` receives a resolved record plus presentation and scale; it returns nothing for an empty or missing record. Future asset rendering can be added there without changing shelves.
 
 ## Design and performance
 

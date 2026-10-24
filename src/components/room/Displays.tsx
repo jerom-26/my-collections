@@ -1,8 +1,19 @@
+import { displayAssignments, resolveDisplayContents } from '../../data/displayAssignments'
+import { sampleCollectibles } from '../../data/sampleCollectibles'
+import type { DisplayId } from '../../types/collectibles'
 import { Artwork } from './Artwork'
-import { Box, Car, Plant } from './Primitives'
+import { CollectibleItem } from './CollectibleItem'
+import { cabinetShelves, cabinetSlots, cardSlots, displaySlots, modelShelfLevels, modelSlots } from './displayLayout'
+import { Box, Plant } from './Primitives'
 import { palette } from './palette'
 
-const carColors = ['#ca6543', '#d8ae47', '#e7e0ca', '#4c7b91', '#77927d', '#b4483a']
+const { collectiblesBySlot, issues } = resolveDisplayContents(
+  sampleCollectibles, displayAssignments, displaySlots.map((slot) => slot.id),
+)
+
+if (import.meta.env.DEV && issues.length) {
+  console.warn('[Collectible displays]', ...issues)
+}
 
 export function DisplayCabinet() {
   return (
@@ -16,10 +27,12 @@ export function DisplayCabinet() {
         <Box position={[x * 0.95, 1.59, -0.265]} size={[0.018, 2.66, 0.018]} color="#ffe1a0" glow={2} />
         <mesh position={[x, 1.61, 0]}><boxGeometry args={[0.012, 2.69, 0.64]} /><meshStandardMaterial color="#b8d5cb" transparent opacity={0.12} roughness={0.15} depthWrite={false} /></mesh>
       </group>)}
-      {[0.34, 0.99, 1.64, 2.29].map((y, row) => <group key={y}>
+      {cabinetShelves.map(({ id, height: y }) => <group key={id}>
         <Box position={[0, y, 0]} size={[1.96, 0.045, 0.66]} color="#b1b7a1" metalness={0.2} />
         <Box position={[0, y + 0.025, -0.24]} size={[1.88, 0.018, 0.025]} color="#ffcc7f" glow={1.8} />
-        {[-0.58, 0.55].map((x, col) => <Car key={x} position={[x, y + 0.04, 0.02]} color={carColors[(row * 2 + col) % carColors.length]} scale={1.55} />)}
+      </group>)}
+      {cabinetSlots.map((slot) => <group key={slot.id} position={slot.position}>
+        <CollectibleItem collectible={collectiblesBySlot.get(slot.id)} presentation={slot.presentation} scale={slot.scale} />
       </group>)}
       {[-0.5, 0.5].map((x) => <group key={x}>
         <mesh position={[x, 1.61, 0.35]}><planeGeometry args={[0.94, 2.69]} /><meshStandardMaterial color="#d5e5d4" transparent opacity={0.075} roughness={0.12} metalness={0.25} depthWrite={false} /></mesh>
@@ -36,27 +49,31 @@ function CardedDisplay() {
   return (
     <group position={[0.6, 2.48, -3.85]}>
       <Box size={[2.09, 1.9, 0.055]} color={palette.ink} />
-      {Array.from({ length: 3 }, (_, row) => Array.from({ length: 5 }, (_, col) => (
-        <group key={`${row}-${col}`} position={[-0.81 + col * 0.405, 0.59 - row * 0.6, 0.05]}>
-          <Artwork kind="card" size={[0.35, 0.53]} />
+      {cardSlots.map((slot) => (
+        <group key={slot.id} position={slot.position}>
           <Box position={[0, 0.242, 0.008]} size={[0.085, 0.013, 0.012]} color={palette.ink} />
-          <Car position={[0, -0.18, 0.05]} scale={0.57} color={carColors[(col + row * 2) % carColors.length]} />
-          <mesh position={[0, -0.11, 0.09]}><boxGeometry args={[0.32, 0.17, 0.12]} /><meshStandardMaterial color="#c6e1dd" transparent opacity={0.13} depthWrite={false} roughness={0.2} /></mesh>
+          <CollectibleItem collectible={collectiblesBySlot.get(slot.id)} presentation={slot.presentation} scale={slot.scale} />
         </group>
-      )))}
+      ))}
       <Box position={[0, 1.1, 0]} size={[2.1, 0.34, 0.065]} color={palette.ink} />
       <Artwork kind="sign" size={[2, 0.5]} position={[0, 1.1, 0.04]} />
     </group>
   )
 }
 
-function ModelShelves({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
+function ModelShelves({ displayId, position, rotation = 0 }: {
+  displayId: Extract<DisplayId, 'back-model-shelves' | 'left-model-shelves'>
+  position: [number, number, number]
+  rotation?: number
+}) {
   return (
     <group position={position} rotation={[0, rotation, 0]}>
-      {[0, 0.58, 1.16].map((y, row) => <group key={y}>
+      {modelShelfLevels.map(({ id, height: y }) => <group key={id}>
         <Box position={[0, y, 0]} size={[1.75, 0.075, 0.41]} color={palette.darkWood} />
         <Box position={[0, y - 0.048, 0.05]} size={[1.56, 0.016, 0.025]} color="#ffda94" glow={2} />
-        {[-0.45, 0.43].map((x, col) => <Car key={x} position={[x, y + 0.04, 0]} scale={1.23} color={carColors[(row * 2 + col + 1) % carColors.length]} />)}
+      </group>)}
+      {modelSlots.filter((slot) => slot.displayId === displayId).map((slot) => <group key={slot.id} position={slot.position}>
+        <CollectibleItem collectible={collectiblesBySlot.get(slot.id)} presentation={slot.presentation} scale={slot.scale} />
       </group>)}
     </group>
   )
@@ -66,8 +83,8 @@ export function WallDisplays() {
   return (
     <group>
       <CardedDisplay />
-      <ModelShelves position={[2.8, 1.91, -3.62]} />
-      <ModelShelves position={[-3.65, 1.98, -2.35]} rotation={Math.PI / 2} />
+      <ModelShelves displayId="back-model-shelves" position={[2.8, 1.91, -3.62]} />
+      <ModelShelves displayId="left-model-shelves" position={[-3.65, 1.98, -2.35]} rotation={Math.PI / 2} />
       <group position={[-3.865, 2.52, -0.42]} rotation={[0, Math.PI / 2, 0]}>
         <Box size={[1.28, 1.69, 0.055]} color={palette.ink} />
         <Artwork kind="poster" size={[1.15, 1.55]} position={[0, 0, 0.032]} />
