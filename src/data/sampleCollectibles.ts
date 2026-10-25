@@ -1,0 +1,47 @@
+import type { Collectible } from '../types/collectibles'
+
+const sampleDetails = {
+  category: 'diecast-car',
+  manufacturer: 'Sample manufacturer',
+  edition: 'Placeholder edition',
+  isSample: true,
+} as const
+
+/** Sample records only. These do not describe the owner's real collection. */
+export const sampleCollectibles: readonly Collectible[] = [
+  { ...sampleDetails, id: 'sample-car-01', name: 'Sample diecast car 01', color: '#ca6543' },
+  { ...sampleDetails, id: 'sample-car-02', name: 'Sample diecast car 02', color: '#d8ae47' },
+  { ...sampleDetails, id: 'sample-car-03', name: 'Sample diecast car 03', color: '#e7e0ca' },
+  { ...sampleDetails, id: 'sample-car-04', name: 'Sample diecast car 04', color: '#4c7b91' },
+  { ...sampleDetails, id: 'sample-car-05', name: 'Sample diecast car 05', color: '#77927d' },
+  { ...sampleDetails, id: 'sample-car-06', name: 'Sample diecast car 06', color: '#b4483a' },
+  { ...sampleDetails, id: 'sample-car-07', name: 'Sample diecast car 07', color: '#ca6543' },
+  { ...sampleDetails, id: 'sample-car-08', name: 'Sample diecast car 08', color: '#d8ae47' },
+  { ...sampleDetails, id: 'sample-car-09', name: 'Sample diecast car 09', color: '#ca6543' },
+  { ...sampleDetails, id: 'sample-car-10', name: 'Sample diecast car 10', color: '#d8ae47' },
+  { ...sampleDetails, id: 'sample-car-11', name: 'Sample diecast car 11', color: '#e7e0ca' },
+  { ...sampleDetails, id: 'sample-car-12', name: 'Sample diecast car 12', color: '#4c7b91' },
+  { ...sampleDetails, id: 'sample-car-13', name: 'Sample diecast car 13', color: '#77927d' },
+  { ...sampleDetails, id: 'sample-car-14', name: 'Sample diecast car 14', color: '#e7e0ca' },
+  { ...sampleDetails, id: 'sample-car-15', name: 'Sample diecast car 15', color: '#4c7b91' },
+  { ...sampleDetails, id: 'sample-car-16', name: 'Sample diecast car 16', color: '#77927d' },
+  { ...sampleDetails, id: 'sample-car-17', name: 'Sample diecast car 17', color: '#b4483a' },
+  { ...sampleDetails, id: 'sample-car-18', name: 'Sample diecast car 18', color: '#ca6543' },
+  { ...sampleDetails, id: 'sample-car-19', name: 'Sample diecast car 19', color: '#77927d' },
+  { ...sampleDetails, id: 'sample-car-20', name: 'Sample diecast car 20', color: '#b4483a' },
+  { ...sampleDetails, id: 'sample-car-21', name: 'Sample diecast car 21', color: '#ca6543' },
+  { ...sampleDetails, id: 'sample-car-22', name: 'Sample diecast car 22', color: '#d8ae47' },
+  { ...sampleDetails, id: 'sample-car-23', name: 'Sample diecast car 23', color: '#e7e0ca' },
+  { ...sampleDetails, id: 'sample-car-24', name: 'Sample diecast car 24', color: '#d8ae47' },
+  { ...sampleDetails, id: 'sample-car-25', name: 'Sample diecast car 25', color: '#e7e0ca' },
+  { ...sampleDetails, id: 'sample-car-26', name: 'Sample diecast car 26', color: '#4c7b91' },
+  { ...sampleDetails, id: 'sample-car-27', name: 'Sample diecast car 27', color: '#77927d' },
+  { ...sampleDetails, id: 'sample-car-28', name: 'Sample diecast car 28', color: '#b4483a' },
+  { ...sampleDetails, id: 'sample-car-29', name: 'Sample diecast car 29', color: '#ca6543' },
+  { ...sampleDetails, id: 'sample-car-30', name: 'Sample diecast car 30', color: '#d8ae47' },
+  { ...sampleDetails, id: 'sample-car-31', name: 'Sample diecast car 31', color: '#e7e0ca' },
+  { ...sampleDetails, id: 'sample-car-32', name: 'Sample diecast car 32', color: '#4c7b91' },
+  { ...sampleDetails, id: 'sample-car-33', name: 'Sample diecast car 33', color: '#77927d' },
+  { ...sampleDetails, id: 'sample-car-34', name: 'Sample diecast car 34', color: '#b4483a' },
+  { ...sampleDetails, id: 'sample-car-35', name: 'Sample diecast car 35', color: '#ca6543' },
+]
