@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { PCFShadowMap } from 'three'
 import RoomScene from './components/room/RoomScene'
+import CollectibleDetails from './components/CollectibleDetails'
+import { sampleCollectibles } from './data/sampleCollectibles'
 import './App.css'
 
 function SceneFallback() {
@@ -19,6 +21,8 @@ export default function App() {
   const [evening, setEvening] = useState(true)
   const [resetKey, setResetKey] = useState(0)
   const [showHelp, setShowHelp] = useState(false)
+  const [selectedCollectibleId, setSelectedCollectibleId] = useState<string | null>(null)
+  const selectedCollectible = sampleCollectibles.find((record) => record.id === selectedCollectibleId)
 
   return (
     <main className="showroom">
@@ -39,10 +43,10 @@ export default function App() {
           <div className="room-number"><span>001</span><span>Your personal escape</span></div>
         </div>
 
-        <div className="scene" role="img" aria-label="3D miniature bedroom with a wooden bed, corner gaming desk, glass cabinet and diecast car displays. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
+        <div className="scene" role="region" aria-label="Interactive 3D bedroom. Select a display car for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
           <SceneBoundary>
             <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 1.75]} frameloop="demand" camera={{ position: [11, 9.4, 12], fov: 37, near: 0.1, far: 250 }} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<SceneFallback />}>
-              <RoomScene evening={evening} resetKey={resetKey} />
+              <RoomScene evening={evening} resetKey={resetKey} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={setSelectedCollectibleId} />
             </Canvas>
           </SceneBoundary>
         </div>
@@ -67,7 +71,10 @@ export default function App() {
           <p>Drag to look around. Scroll to zoom. Right-drag or Shift-drag to pan.</p>
           <p>On touch screens, drag with one finger to rotate. Pinch or use two fingers to zoom and pan.</p>
           <p>Use the reset button to return to this view.</p>
+          <p>Click or tap a display car for details. Close the details to keep exploring.</p>
         </aside>
+
+        {selectedCollectible && <CollectibleDetails collectible={selectedCollectible} onClose={() => setSelectedCollectibleId(null)} />}
 
         <div className="scene-caption"><span>Room to be yourself.</span><p>A miniature collector’s retreat</p></div>
         <div className="viewer-hint" aria-hidden="true"><svg viewBox="0 0 18 24"><rect x="3" y="1" width="12" height="21" rx="6" /><path d="M9 5v5" /></svg><span className="desktop-hint">Drag to explore</span><i className="divider desktop-hint" /><span>Scroll / pinch to zoom</span></div>
