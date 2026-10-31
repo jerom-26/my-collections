@@ -29,8 +29,8 @@ with `BigInt`. API order never changes collectible identity.
 
 The board shows at most 15 assets, ordered by descending asset ID, from the
 API's first 100 records. This feature is a wall display, not a complete inventory
-browser. Unused slots stay empty. All 35 sample records and all non-wall sample
-assignments are retained.
+browser. Unused slots stay empty. All 35 sample records are retained. WAX updates
+preserve every non-wall assignment, including independently assigned physical items.
 
 AtomicAssets availability/indexing and image gateway CORS remain external
 constraints. The bundled previews avoid gateway downloads for the seven known
@@ -46,7 +46,7 @@ Validation: `npm run build`, `npm run lint`, and
 - `src/data/displayAssignments.ts`: compose wall-only assignments.
 - `src/App.tsx`, `src/components/room/RoomScene.tsx`: pass resolved contents to the scene and keep selected IDs in React.
 - `src/components/room/Displays.tsx`, `CollectibleItem.tsx`, `NftArtwork.tsx`: physical displays and static card rendering.
-- `src/services/nftMedia.ts`, `src/hooks/useNftArtwork.ts`: bounded still-image requests and cancellation.
+- `src/services/collectibleMedia.ts`, `src/hooks/useCollectibleArtwork.ts`: shared bounded still-image requests and cancellation.
 - `src/components/CollectibleDetails.tsx`, `src/App.css`: NFT artwork, metadata, explorer link and request status.
 - `src/data/waxPosters.json`, `public/nft-posters/*.jpg`: preview mapping and seven reused artwork frames.
 - `tests/collectibles.test.mjs`: metadata, precision, assignments, API/media failures and preview files.

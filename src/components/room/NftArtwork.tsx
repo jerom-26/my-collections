@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { CanvasTexture, SRGBColorSpace, Texture } from 'three'
-import { useNftArtwork } from '../../hooks/useNftArtwork'
+import { useCollectibleArtwork } from '../../hooks/useCollectibleArtwork'
 import type { Collectible } from '../../types/collectibles'
 
 function statusTexture(failed: boolean) {
@@ -17,7 +17,7 @@ function statusTexture(failed: boolean) {
 
 /** Artwork fits inside the existing card area; the pick box remains in CollectibleItem. */
 export default function NftArtwork({ collectible }: { collectible: Collectible }) {
-  const { image, failed } = useNftArtwork(collectible.imageUrl)
+  const { image, failed } = useCollectibleArtwork(collectible.imageUrl)
   const texture = useMemo(() => {
     const next = image ? new Texture(image) : statusTexture(failed)
     next.colorSpace = SRGBColorSpace
