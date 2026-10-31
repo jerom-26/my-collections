@@ -3,13 +3,32 @@ export interface Collectible {
   readonly id: string
   readonly name: string
   readonly category: string
-  readonly manufacturer: string
-  readonly edition: string
-  readonly color: string
+  readonly manufacturer?: string
+  readonly edition?: string
+  readonly color?: string
   readonly isSample: boolean
-  /** Optional asset references; the current renderer uses procedural placeholders. */
+  /** Media references contain no physical display coordinates. */
   readonly imageUrl?: string
   readonly modelUrl?: string
+  readonly wax?: WaxCollectibleMetadata
+}
+
+export interface WaxCollectibleMetadata {
+  readonly assetId: string
+  readonly owner: string
+  readonly collection: string
+  readonly collectionName?: string
+  readonly series?: string
+  readonly set?: string
+  readonly make?: string
+  readonly model?: string
+  readonly rarity?: string
+  readonly templateId?: string
+  readonly mint?: string
+  readonly maxSupply?: string
+  readonly year?: string
+  readonly designer?: string
+  readonly animationUrl?: string
 }
 
 export type DisplayId = 'cabinet' | 'card-wall' | 'back-model-shelves' | 'left-model-shelves'

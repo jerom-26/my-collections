@@ -4,6 +4,7 @@ import type { Collectible, DisplayPresentation } from '../../types/collectibles'
 import { Artwork } from './Artwork'
 import { Car } from './Primitives'
 import { palette } from './palette'
+import NftArtwork from './NftArtwork'
 
 export interface CollectibleSelectionProps {
   selectedCollectibleId: string | null
@@ -27,7 +28,7 @@ export function CollectibleItem({ collectible, presentation, scale, selectedColl
 
   return (
     <group name={`collectible-${collectible.id}`} onClick={(event) => onSelectCollectible(collectible.id, event)}>
-      {carded ? <>
+      {carded && collectible.wax ? <NftArtwork collectible={collectible} /> : carded ? <>
         <Artwork kind="card" size={[0.35, 0.53]} />
         <Car position={[0, -0.18, 0.05]} color={collectible.color} scale={scale} />
         <mesh position={[0, -0.11, 0.09]}>

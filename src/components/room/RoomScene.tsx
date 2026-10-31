@@ -11,6 +11,7 @@ import { DisplayCabinet, WallDisplays } from './Displays'
 import Lighting from './Lighting'
 import Room from './Room'
 import Workstation from './Workstation'
+import type { Collectible, DisplaySlotId } from '../../types/collectibles'
 
 function CameraRig({ resetKey }: { resetKey: number }) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null)
@@ -31,13 +32,14 @@ function CameraRig({ resetKey }: { resetKey: number }) {
 }
 
 interface RoomSceneProps {
+  collectiblesBySlot: ReadonlyMap<DisplaySlotId, Collectible>
   evening: boolean
   resetKey: number
   selectedCollectibleId: string | null
   onSelectCollectible: (id: string) => void
 }
 
-export default function RoomScene({ evening, resetKey, selectedCollectibleId, onSelectCollectible }: RoomSceneProps) {
+export default function RoomScene({ evening, resetKey, selectedCollectibleId, onSelectCollectible, collectiblesBySlot }: RoomSceneProps) {
   const canvas = useThree((state) => state.gl.domElement)
   const scene = useThree((state) => state.scene)
   const camera = useThree((state) => state.camera)
@@ -123,8 +125,8 @@ export default function RoomScene({ evening, resetKey, selectedCollectibleId, on
         <Room />
         <Bed />
         <Workstation />
-        <DisplayCabinet selectedCollectibleId={selectedCollectibleId} onSelectCollectible={selectCollectible} />
-        <WallDisplays selectedCollectibleId={selectedCollectibleId} onSelectCollectible={selectCollectible} />
+        <DisplayCabinet collectiblesBySlot={collectiblesBySlot} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={selectCollectible} />
+        <WallDisplays collectiblesBySlot={collectiblesBySlot} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={selectCollectible} />
         <Decorations evening={evening} />
         <ContactShadows position={[0, 0.026, 0]} scale={12} far={4.5} opacity={0.38} blur={2} resolution={512} frames={1} color="#554332" />
       </ArtworkProvider>
