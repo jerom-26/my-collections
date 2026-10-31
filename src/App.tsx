@@ -1,10 +1,13 @@
-import { Component, useState } from 'react'
+import { Component, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { PCFShadowMap } from 'three'
 import RoomScene from './components/room/RoomScene'
 import CollectibleDetails from './components/CollectibleDetails'
 import { sampleCollectibles } from './data/sampleCollectibles'
+import { assignWallCollectibles, displayAssignments, resolveDisplayContents } from './data/displayAssignments'
+import { cardSlots, displaySlots } from './components/room/displayLayout'
+import { useWaxCollectibles } from './hooks/useWaxCollectibles'
 import './App.css'
 
 function SceneFallback() {
@@ -22,7 +25,17 @@ export default function App() {
   const [resetKey, setResetKey] = useState(0)
   const [showHelp, setShowHelp] = useState(false)
   const [selectedCollectibleId, setSelectedCollectibleId] = useState<string | null>(null)
-  const selectedCollectible = sampleCollectibles.find((record) => record.id === selectedCollectibleId)
+  const wax = useWaxCollectibles()
+  const { records, collectiblesBySlot, issues } = useMemo(() => {
+    const records = [...sampleCollectibles, ...wax.collectibles]
+    const assignments = assignWallCollectibles(displayAssignments, cardSlots.map((slot) => slot.id), wax.collectibles)
+    const resolved = resolveDisplayContents(records, assignments, displaySlots.map((slot) => slot.id))
+    return { records, ...resolved }
+  }, [wax.collectibles])
+  useEffect(() => {
+    if (import.meta.env.DEV && issues.length) console.warn('[Collectible displays]', ...issues)
+  }, [issues])
+  const selectedCollectible = records.find((record) => record.id === selectedCollectibleId)
 
   return (
     <main className="showroom">
@@ -43,12 +56,19 @@ export default function App() {
           <div className="room-number"><span>001</span><span>Your personal escape</span></div>
         </div>
 
-        <div className="scene" role="region" aria-label="Interactive 3D bedroom. Select a display car for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
+        <div className="scene" role="region" aria-label="Interactive 3D bedroom. Select a car or NFT card for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
           <SceneBoundary>
             <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 1.75]} frameloop="demand" camera={{ position: [11, 9.4, 12], fov: 37, near: 0.1, far: 250 }} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<SceneFallback />}>
-              <RoomScene evening={evening} resetKey={resetKey} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={setSelectedCollectibleId} />
+              <RoomScene collectiblesBySlot={collectiblesBySlot} evening={evening} resetKey={resetKey} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={setSelectedCollectibleId} />
             </Canvas>
           </SceneBoundary>
+        </div>
+
+        <div className="wax-status" role="status">
+          {wax.loading ? 'Loading WAX wall cards…' : wax.error ? <>
+            <span>{wax.error}</span><button type="button" onClick={wax.retry}>Retry WAX cards</button>
+          </> : wax.collectibles.length === 0 ? 'No Hot Wheels NFTs found for passionfruti.'
+            : `${Math.min(wax.collectibles.length, cardSlots.length)} WAX cards on display · passionfruti${wax.collectibles.length > cardSlots.length ? ' · Wall capacity: 15' : ''}`}
         </div>
 
         <div className="viewer-tools" aria-label="Room controls">
@@ -71,7 +91,7 @@ export default function App() {
           <p>Drag to look around. Scroll to zoom. Right-drag or Shift-drag to pan.</p>
           <p>On touch screens, drag with one finger to rotate. Pinch or use two fingers to zoom and pan.</p>
           <p>Use the reset button to return to this view.</p>
-          <p>Click or tap a display car for details. Close the details to keep exploring.</p>
+          <p>Click or tap a display car or NFT card for details. Close the details to keep exploring.</p>
         </aside>
 
         {selectedCollectible && <CollectibleDetails collectible={selectedCollectible} onClose={() => setSelectedCollectibleId(null)} />}

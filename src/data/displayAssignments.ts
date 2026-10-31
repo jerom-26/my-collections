@@ -39,7 +39,20 @@ export const displayAssignments: DisplayAssignments = {
   'left-model-shelves:shelf-3-right': 'sample-car-35',
 }
 
-/** Resolve once for static data. Invalid links leave empty slots instead of crashing. */
+/** Replace only the wall grid, without changing the saved sample inventory or other assignments. */
+export function assignWallCollectibles(
+  base: DisplayAssignments,
+  wallSlotIds: readonly DisplaySlotId[],
+  collectibles: readonly Collectible[],
+): DisplayAssignments {
+  const assignments = { ...base }
+  wallSlotIds.forEach((id, index) => {
+    if (id.startsWith('card-wall:')) assignments[id] = collectibles[index]?.id ?? null
+  })
+  return assignments
+}
+
+/** Invalid links leave empty slots instead of crashing. */
 export function resolveDisplayContents(
   collectibles: readonly Collectible[],
   assignments: DisplayAssignments,

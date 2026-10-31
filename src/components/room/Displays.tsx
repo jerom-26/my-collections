@@ -1,22 +1,16 @@
-import { displayAssignments, resolveDisplayContents } from '../../data/displayAssignments'
-import { sampleCollectibles } from '../../data/sampleCollectibles'
-import type { DisplayId } from '../../types/collectibles'
+import type { Collectible, DisplayId, DisplaySlotId } from '../../types/collectibles'
 import { Artwork } from './Artwork'
 import { CollectibleItem } from './CollectibleItem'
 import type { CollectibleSelectionProps } from './CollectibleItem'
-import { cabinetShelves, cabinetSlots, cardSlots, displaySlots, modelShelfLevels, modelSlots } from './displayLayout'
+import { cabinetShelves, cabinetSlots, cardSlots, modelShelfLevels, modelSlots } from './displayLayout'
 import { Box, Plant } from './Primitives'
 import { palette } from './palette'
 
-const { collectiblesBySlot, issues } = resolveDisplayContents(
-  sampleCollectibles, displayAssignments, displaySlots.map((slot) => slot.id),
-)
-
-if (import.meta.env.DEV && issues.length) {
-  console.warn('[Collectible displays]', ...issues)
+interface DisplayProps extends CollectibleSelectionProps {
+  collectiblesBySlot: ReadonlyMap<DisplaySlotId, Collectible>
 }
 
-export function DisplayCabinet(selection: CollectibleSelectionProps) {
+export function DisplayCabinet({ collectiblesBySlot, ...selection }: DisplayProps) {
   return (
     <group position={[-3.44, 0, 1.34]} rotation={[0, Math.PI / 2, 0]}>
       <Box position={[0, 0.15, 0]} size={[2.07, 0.25, 0.73]} color={palette.ink} />
@@ -46,7 +40,7 @@ export function DisplayCabinet(selection: CollectibleSelectionProps) {
   )
 }
 
-function CardedDisplay(selection: CollectibleSelectionProps) {
+function CardedDisplay({ collectiblesBySlot, ...selection }: DisplayProps) {
   return (
     <group position={[0.6, 2.48, -3.85]}>
       <Box size={[2.09, 1.9, 0.055]} color={palette.ink} />
@@ -62,7 +56,7 @@ function CardedDisplay(selection: CollectibleSelectionProps) {
   )
 }
 
-function ModelShelves({ displayId, position, rotation = 0, ...selection }: CollectibleSelectionProps & {
+function ModelShelves({ displayId, position, rotation = 0, collectiblesBySlot, ...selection }: DisplayProps & {
   displayId: Extract<DisplayId, 'back-model-shelves' | 'left-model-shelves'>
   position: [number, number, number]
   rotation?: number
@@ -80,7 +74,7 @@ function ModelShelves({ displayId, position, rotation = 0, ...selection }: Colle
   )
 }
 
-export function WallDisplays(selection: CollectibleSelectionProps) {
+export function WallDisplays(selection: DisplayProps) {
   return (
     <group>
       <CardedDisplay {...selection} />
