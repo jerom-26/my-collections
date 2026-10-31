@@ -9,6 +9,13 @@ export interface Collectible {
   readonly isSample: boolean
   /** Media references contain no physical display coordinates. */
   readonly imageUrl?: string
+  /** Optional crop in normalized image coordinates, measured from the top-left. */
+  readonly imageCrop?: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }
+  readonly representation?: 'boxed'
+  readonly series?: string
+  readonly boxNumber?: string
+  readonly productNumber?: string
+  readonly packaging?: string
   readonly modelUrl?: string
   readonly wax?: WaxCollectibleMetadata
 }

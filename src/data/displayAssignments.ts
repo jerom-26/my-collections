@@ -8,7 +8,7 @@ export const displayAssignments: DisplayAssignments = {
   'cabinet:shelf-2-right': 'sample-car-04',
   'cabinet:shelf-3-left': 'sample-car-05',
   'cabinet:shelf-3-right': 'sample-car-06',
-  'cabinet:shelf-4-left': 'sample-car-07',
+  'cabinet:shelf-4-left': 'physical-batman-beyond-458-chase',
   'cabinet:shelf-4-right': 'sample-car-08',
   'card-wall:row-1-slot-1': 'sample-car-09',
   'card-wall:row-1-slot-2': 'sample-car-10',

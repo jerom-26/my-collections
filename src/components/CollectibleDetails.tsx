@@ -1,16 +1,24 @@
 import { useEffect } from 'react'
 import type { Collectible } from '../types/collectibles'
-import { useNftArtwork } from '../hooks/useNftArtwork'
+import { useCollectibleArtwork } from '../hooks/useCollectibleArtwork'
 
 interface CollectibleDetailsProps {
   collectible: Collectible
   onClose: () => void
 }
 
-function NftDetailsImage({ collectible }: { collectible: Collectible }) {
-  const { image, failed } = useNftArtwork(collectible.imageUrl)
+function CollectibleDetailsImage({ collectible }: { collectible: Collectible }) {
+  const { image, failed } = useCollectibleArtwork(collectible.imageUrl)
+  const crop = collectible.imageCrop
+  const alt = `${collectible.name} ${collectible.wax ? 'NFT artwork' : 'product photo'}`
+  const ratio = image && crop ? image.naturalWidth * crop.width / (image.naturalHeight * crop.height) : 1
   return <div className="details-artwork">
-    {image ? <img src={image.src} alt={`${collectible.name} NFT artwork`} />
+    {image ? crop ? <div className="details-photo-crop" style={{ aspectRatio: ratio, width: 180 * ratio }}>
+      <img src={image.src} alt={alt} style={{
+        width: `${100 / crop.width}%`, left: `${-100 * crop.left / crop.width}%`,
+        top: `${-100 * crop.top / crop.height}%`, maxWidth: 'none', maxHeight: 'none',
+      }} />
+    </div> : <img src={image.src} alt={alt} />
       : <span role="status">{failed ? 'Artwork unavailable' : 'Loading artwork…'}</span>}
   </div>
 }
@@ -24,7 +32,10 @@ export default function CollectibleDetails({ collectible, onClose }: Collectible
     ['Template', nft.templateId],
     ['Mint', nft.mint ? `#${nft.mint}${nft.maxSupply && nft.maxSupply !== '0' ? ` / ${nft.maxSupply}` : ''}` : undefined],
     ['Year released', nft.year], ['Designer', nft.designer], ['Owner', nft.owner],
-  ] : []
+  ] : [
+    ['Series', collectible.series], ['Box number', collectible.boxNumber],
+    ['Product number', collectible.productNumber], ['Packaging', collectible.packaging],
+  ]
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -36,12 +47,12 @@ export default function CollectibleDetails({ collectible, onClose }: Collectible
   return (
     <aside className="collectible-details" aria-labelledby="collectible-title">
       <div className="details-header">
-        <span className="eyebrow">{collectible.isSample ? 'Sample collectible' : nft ? 'WAX collectible' : 'Collectible'}</span>
+        <span className="eyebrow">{collectible.isSample ? 'Sample collectible' : nft ? 'WAX collectible' : 'Physical collectible'}</span>
         <button className="details-close" type="button" onClick={onClose} aria-label="Close collectible details">×</button>
       </div>
       <div aria-live="polite" aria-atomic="true">
         <h2 id="collectible-title">{collectible.name}</h2>
-        {nft && <NftDetailsImage key={collectible.id} collectible={collectible} />}
+        {(nft || collectible.imageUrl) && <CollectibleDetailsImage key={collectible.id} collectible={collectible} />}
         <dl>
           {collectible.manufacturer && <div><dt>Manufacturer</dt><dd>{collectible.manufacturer}</dd></div>}
           <div><dt>Category</dt><dd>{collectible.category.replaceAll('-', ' ')}</dd></div>

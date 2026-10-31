@@ -1,4 +1,4 @@
-// Adapted from collectible-showcase/lib/nft-media.ts; this version loads still images only.
+// Shared still-image loading, adapted from collectible-showcase/lib/nft-media.ts.
 export function loadStaticArtwork(url: string | undefined, signal: AbortSignal): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     if (signal.aborted) { reject(signal.reason); return }

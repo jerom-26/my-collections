@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises'
 import { parseWaxAssets, resolveMediaUrl, fetchWaxCollectibles } from '../src/services/wax.ts'
 import { assignWallCollectibles, displayAssignments, resolveDisplayContents } from '../src/data/displayAssignments.ts'
 import { sampleCollectibles } from '../src/data/sampleCollectibles.ts'
+import { physicalCollectibles } from '../src/data/physicalCollectibles.ts'
 import { cardSlots, displaySlots } from '../src/components/room/displayLayout.ts'
-import { loadStaticArtwork } from '../src/services/nftMedia.ts'
+import { loadStaticArtwork } from '../src/services/collectibleMedia.ts'
 
 // Synthetic parser fixtures are test data, never inventory shown in the room.
 const video = 'QmUARJedfNNefhpFT3G43GwUJTWoJ5XqrPTw1iJB88dbWE/NFTs/HW%20Dream%20Garage/HWPaganiZondaRBASE34.mp4'
@@ -67,7 +68,7 @@ test('assigns only wall slots, keeps 20 other placements and 35 original sample 
   const records = Array.from({ length: 7 }, (_, index) => parseWaxAssets({ success: true, data: [fixture(String(index + 1))] })[0])
   const slots = cardSlots.map(slot => slot.id)
   const assignments = assignWallCollectibles(displayAssignments, slots, records)
-  const resolved = resolveDisplayContents([...sampleCollectibles, ...records], assignments, displaySlots.map(slot => slot.id))
+  const resolved = resolveDisplayContents([...sampleCollectibles, ...physicalCollectibles, ...records], assignments, displaySlots.map(slot => slot.id))
   assert.equal(new Set(displaySlots.map(slot => slot.id)).size, 35)
   assert.equal(sampleCollectibles.length, 35)
   assert.equal(resolved.collectiblesBySlot.size, 27)
@@ -83,6 +84,35 @@ test('assigns only wall slots, keeps 20 other placements and 35 original sample 
   const broken = resolveDisplayContents([], { [slots[0]]: 'missing' }, slots)
   assert.equal(broken.collectiblesBySlot.size, 0)
   assert.match(broken.issues[0], /Missing collectible/)
+})
+
+test('Batman replaces only the top-left cabinet car and stays independent of WAX', async () => {
+  const [batman] = physicalCollectibles
+  assert.equal(physicalCollectibles.length, 1)
+  assert.equal(batman.manufacturer, 'Funko')
+  assert.equal(batman.boxNumber, '458')
+  assert.equal(batman.edition, 'Transparent Chase')
+  assert.equal(batman.representation, 'boxed')
+  assert.equal(batman.isSample, false)
+  assert.equal(batman.wax, undefined)
+  assert.equal(batman.color, undefined)
+  assert.equal(batman.packaging, 'Protective case; Limited Chase Edition sticker only')
+  const resolved = resolveDisplayContents([...sampleCollectibles, ...physicalCollectibles], displayAssignments, displaySlots.map(slot => slot.id))
+  assert.deepEqual(resolved.issues, [])
+  assert.equal(resolved.collectiblesBySlot.get('cabinet:shelf-4-left'), batman)
+  assert.equal([...resolved.collectiblesBySlot.values()].filter(item => item.id === 'sample-car-07').length, 0)
+  assert.ok(sampleCollectibles.some(item => item.id === 'sample-car-07'))
+  for (const [slot, id] of [
+    ['cabinet:shelf-1-left', 'sample-car-01'], ['cabinet:shelf-1-right', 'sample-car-02'],
+    ['cabinet:shelf-2-left', 'sample-car-03'], ['cabinet:shelf-2-right', 'sample-car-04'],
+    ['cabinet:shelf-3-left', 'sample-car-05'], ['cabinet:shelf-3-right', 'sample-car-06'],
+    ['cabinet:shelf-4-right', 'sample-car-08'],
+  ]) assert.equal(resolved.collectiblesBySlot.get(slot).id, id)
+  const crop = batman.imageCrop
+  assert.ok(crop.left >= 0 && crop.top >= 0 && crop.width > 0 && crop.height > 0)
+  assert.ok(crop.left + crop.width <= 1 && crop.top + crop.height <= 1)
+  const bytes = await readFile(new URL('../public' + batman.imageUrl, import.meta.url))
+  assert.equal(bytes.readUInt16BE(0), 0xffd8)
 })
 
 test('bundled artwork references all exist and are JPEGs', async () => {

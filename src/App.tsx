@@ -5,6 +5,7 @@ import { PCFShadowMap } from 'three'
 import RoomScene from './components/room/RoomScene'
 import CollectibleDetails from './components/CollectibleDetails'
 import { sampleCollectibles } from './data/sampleCollectibles'
+import { physicalCollectibles } from './data/physicalCollectibles'
 import { assignWallCollectibles, displayAssignments, resolveDisplayContents } from './data/displayAssignments'
 import { cardSlots, displaySlots } from './components/room/displayLayout'
 import { useWaxCollectibles } from './hooks/useWaxCollectibles'
@@ -27,7 +28,7 @@ export default function App() {
   const [selectedCollectibleId, setSelectedCollectibleId] = useState<string | null>(null)
   const wax = useWaxCollectibles()
   const { records, collectiblesBySlot, issues } = useMemo(() => {
-    const records = [...sampleCollectibles, ...wax.collectibles]
+    const records = [...sampleCollectibles, ...physicalCollectibles, ...wax.collectibles]
     const assignments = assignWallCollectibles(displayAssignments, cardSlots.map((slot) => slot.id), wax.collectibles)
     const resolved = resolveDisplayContents(records, assignments, displaySlots.map((slot) => slot.id))
     return { records, ...resolved }
@@ -56,7 +57,7 @@ export default function App() {
           <div className="room-number"><span>001</span><span>Your personal escape</span></div>
         </div>
 
-        <div className="scene" role="region" aria-label="Interactive 3D bedroom. Select a car or NFT card for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
+        <div className="scene" role="region" aria-label="Interactive 3D bedroom. Select a displayed collectible for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
           <SceneBoundary>
             <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 1.75]} frameloop="demand" camera={{ position: [11, 9.4, 12], fov: 37, near: 0.1, far: 250 }} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<SceneFallback />}>
               <RoomScene collectiblesBySlot={collectiblesBySlot} evening={evening} resetKey={resetKey} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={setSelectedCollectibleId} />
@@ -91,7 +92,7 @@ export default function App() {
           <p>Drag to look around. Scroll to zoom. Right-drag or Shift-drag to pan.</p>
           <p>On touch screens, drag with one finger to rotate. Pinch or use two fingers to zoom and pan.</p>
           <p>Use the reset button to return to this view.</p>
-          <p>Click or tap a display car or NFT card for details. Close the details to keep exploring.</p>
+          <p>Click or tap a displayed collectible for details. Close the details to keep exploring.</p>
         </aside>
 
         {selectedCollectible && <CollectibleDetails collectible={selectedCollectible} onClose={() => setSelectedCollectibleId(null)} />}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { loadStaticArtwork } from '../services/nftMedia'
+import { loadStaticArtwork } from '../services/collectibleMedia'
 
-export function useNftArtwork(imageUrl?: string) {
+export function useCollectibleArtwork(imageUrl?: string) {
   const [result, setResult] = useState<{
     imageUrl?: string; image: HTMLImageElement | null; failed: boolean
   }>({ image: null, failed: false })
