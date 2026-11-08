@@ -7,12 +7,16 @@
   redistribution license is claimed. Front/right face coordinates in
   `collectiblePresentations.ts` sample the original in the renderer; the source
   bitmap is not retouched. Hidden faces use solid materials.
-- `alfa-temporary.svg` and `chevelle-temporary.svg`: original, deliberately labeled
-  temporary illustrations approved by the owner while their photos are pending.
-  These are not reproductions of official card artwork or product photographs.
-  Replace the record's image URL with an authorized front photo and remove
-  `artworkStatus: 'temporary'` when it becomes available. The clamshell geometry
-  and display assignments need no changes.
+- `alfa-romeo-155-v6-ti.png`: user-supplied 1000 × 1000 product photograph of the
+  red 2024 Collector Edition Alfa Romeo 155 V6 TI (HTF96).
+- `chevelle-ss-396-series-6.png`: user-supplied 700 × 700 product photograph of
+  NFT Garage Series 6 #28, ’69 Chevelle SS 396 (HWW87).
+  Both replace the original temporary SVG illustrations. The files are copied
+  unchanged from the attachments supplied for this use; no claim is made that
+  the owner took these photos or that they carry an open redistribution license.
+  The records' normalized `imageCrop` excludes white margins in both the 3D card
+  and the details panel, without modifying the original pixels or printed labels.
+  The transparent clamshell geometry and all display assignments are unchanged.
 
 Metadata/reference research:
 

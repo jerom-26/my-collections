@@ -104,7 +104,6 @@ test('Batman keeps its top-left cabinet slot, photo, metadata and renderer', asy
   assert.ok(sampleCollectibles.some(item => item.id === 'sample-car-07'))
   for (const [slot, id] of [
     ['cabinet:shelf-1-left', 'sample-car-01'], ['cabinet:shelf-1-right', 'sample-car-02'],
-    ['cabinet:shelf-2-left', 'sample-car-03'], ['cabinet:shelf-2-right', 'sample-car-04'],
   ]) assert.equal(resolved.collectiblesBySlot.get(slot).id, id)
   const crop = batman.imageCrop
   assert.ok(crop.left >= 0 && crop.top >= 0 && crop.width > 0 && crop.height > 0)
@@ -114,16 +113,16 @@ test('Batman keeps its top-left cabinet slot, photo, metadata and renderer', asy
 })
 
 test('adds exactly three owned physical Hot Wheels in the approved slots, independent of WAX', async () => {
-  assert.equal(physicalCollectibles.length, 4)
+  assert.equal(physicalCollectibles.length, 6)
   const hotWheels = physicalCollectibles.filter(item => item.inventoryNumber !== undefined)
   assert.deepEqual(hotWheels.map(item => item.inventoryNumber), [6, 40, 11])
-  assert.equal(new Set(physicalCollectibles.map(item => item.id)).size, 4)
+  assert.equal(new Set(physicalCollectibles.map(item => item.id)).size, 6)
   const resolved = resolveDisplayContents([...sampleCollectibles, ...physicalCollectibles], displayAssignments, displaySlots.map(slot => slot.id))
   assert.deepEqual(resolved.issues, [])
   const expected = [
     ['cabinet:shelf-3-left', 6, 'HTF96', 'clamshell'],
-    ['cabinet:shelf-3-right', 40, 'HWW87', 'clamshell'],
-    ['cabinet:shelf-4-right', 11, 'JWT48', 'premium-box'],
+    ['cabinet:shelf-3-right', 11, 'JWT48', 'premium-box'],
+    ['cabinet:shelf-4-right', 40, 'HWW87', 'clamshell'],
   ]
   for (const [slot, inventory, product, kind] of expected) {
     const item = resolved.collectiblesBySlot.get(slot)
@@ -135,11 +134,14 @@ test('adds exactly three owned physical Hot Wheels in the approved slots, indepe
     assert.equal(item.representation, undefined)
     assert.equal(collectiblePresentations[item.id].kind, kind)
     const bytes = await readFile(new URL('../public' + item.imageUrl, import.meta.url))
-    if (inventory === 11) assert.equal(bytes.readUInt32BE(0), 0x89504e47)
-    else {
-      assert.equal(item.artworkStatus, 'temporary')
-      assert.match(bytes.toString(), /TEMPORARY ARTWORK/)
-      assert.match(bytes.toString(), /Not original card art/)
+    assert.equal(bytes.readUInt32BE(0), 0x89504e47)
+    assert.equal(item.artworkStatus, undefined)
+    if (inventory !== 11) {
+      const crop = item.imageCrop
+      assert.ok(crop.left >= 0 && crop.top >= 0 && crop.width > 0 && crop.height > 0)
+      assert.ok(crop.left + crop.width <= 1 && crop.top + crop.height <= 1)
+      const aspect = bytes.readUInt32BE(16) * crop.width / (bytes.readUInt32BE(20) * crop.height)
+      assert.ok(aspect > 0.6 && aspect < 0.7, 'card retains its portrait proportions')
     }
   }
   for (const id of ['sample-car-05', 'sample-car-06', 'sample-car-08']) {
@@ -157,7 +159,8 @@ test('physical packaging fits the unchanged cabinet, including the Porsche top m
     const config = collectiblePresentations[displayAssignments[slot.id]]
     if (!config) continue
     const [width, height, depth] = config.size
-    const [x, y, z] = slot.position
+    const [x, anchor, z] = slot.position
+    const y = anchor + (config.kind === 'box' ? config.baseOffset : 0)
     const nextShelf = cabinetShelves.find(shelf => shelf.height > y)
     const ceiling = nextShelf ? nextShelf.height - 0.045 / 2 : 3 - 0.12 / 2
     assert.ok(y + height < ceiling, `${slot.id}: vertical clearance`)
@@ -172,6 +175,56 @@ test('physical packaging fits the unchanged cabinet, including the Porsche top m
         for (const point of quad) assert.ok(point.every(value => value >= 0 && value <= 1))
       }
     }
+  }
+})
+
+test('Thor and Cadillac replace only cars 03/04 with correctly proportioned selectable boxes', async () => {
+  const resolved = resolveDisplayContents([...sampleCollectibles, ...physicalCollectibles], displayAssignments, displaySlots.map(slot => slot.id))
+  assert.deepEqual(resolved.issues, [])
+  const thor = resolved.collectiblesBySlot.get('cabinet:shelf-2-left')
+  const cadillac = resolved.collectiblesBySlot.get('cabinet:shelf-2-right')
+  assert.equal(thor.id, 'physical-funko-thor-comic-cover-09')
+  assert.equal(thor.name, 'Thor Comic Cover')
+  assert.equal(thor.manufacturer, 'Funko')
+  assert.equal(thor.line, 'Pop! Comic Covers')
+  assert.equal(thor.franchise, 'Marvel')
+  assert.equal(thor.character, 'Thor')
+  assert.equal(thor.comic, 'Journey Into Mystery #83')
+  assert.equal(thor.boxNumber, '09')
+  assert.equal(thor.packaging, 'Sealed boxed')
+  assert.equal(cadillac.id, 'physical-brick-shop-cadillac-project-gtp-hypercar')
+  assert.equal(cadillac.manufacturer, 'Mattel')
+  assert.equal(cadillac.line, 'Mattel Brick Shop / Hot Wheels')
+  assert.equal(cadillac.vehicle, 'Cadillac Project GTP Hypercar')
+  assert.equal(cadillac.pieceCount, 236)
+  assert.equal(cadillac.ageRating, '10+')
+  assert.equal(cadillac.packaging, 'Boxed')
+  for (const item of [thor, cadillac]) {
+    assert.equal(item.ownership, 'Owned')
+    assert.equal(item.isSample, false)
+    assert.equal(item.wax, undefined)
+    assert.equal(item.releaseYear, undefined)
+    const config = collectiblePresentations[item.id]
+    assert.equal(config.kind, 'box')
+    const image = await readFile(new URL('../public' + item.imageUrl, import.meta.url))
+    assert.equal(image.readUInt32BE(0), 0x89504e47)
+    const crop = item.imageCrop
+    assert.ok(crop.left >= 0 && crop.top >= 0 && crop.width > 0 && crop.height > 0)
+    assert.ok(crop.left + crop.width <= 1 && crop.top + crop.height <= 1)
+    const ratio = image.readUInt32BE(16) * crop.width / (image.readUInt32BE(20) * crop.height)
+    assert.ok(Math.abs(ratio - config.size[0] / config.size[1]) < 0.02)
+  }
+  assert.ok(collectiblePresentations[thor.id].size[1] > collectiblePresentations[thor.id].size[0])
+  assert.ok(collectiblePresentations[cadillac.id].size[0] > collectiblePresentations[cadillac.id].size[1])
+  for (const [slot, id] of [
+    ['cabinet:shelf-4-left', 'physical-batman-beyond-458-chase'],
+    ['cabinet:shelf-4-right', 'physical-hot-wheels-chevelle-ss-396-series-6'],
+    ['cabinet:shelf-3-left', 'physical-hot-wheels-alfa-romeo-155-v6-ti-2024'],
+    ['cabinet:shelf-3-right', 'physical-hot-wheels-lewandowski-porsche-911-gt1'],
+  ]) assert.equal(resolved.collectiblesBySlot.get(slot).id, id)
+  for (const id of ['sample-car-03', 'sample-car-04']) {
+    assert.ok(sampleCollectibles.some(item => item.id === id))
+    assert.ok(![...resolved.collectiblesBySlot.values()].some(item => item.id === id))
   }
 })
 

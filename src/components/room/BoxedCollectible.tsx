@@ -6,6 +6,8 @@ import { useCollectibleArtwork } from '../../hooks/useCollectibleArtwork'
 interface BoxedCollectibleProps {
   collectible: Collectible
   size: [number, number, number]
+  bodyColor?: string
+  protector?: boolean
 }
 
 function photoStatusTexture(failed: boolean) {
@@ -19,7 +21,7 @@ function photoStatusTexture(failed: boolean) {
 }
 
 /** A physical box; its photograph is a front-face texture, not a floating image. */
-export default function BoxedCollectible({ collectible, size: [width, height, depth] }: BoxedCollectibleProps) {
+export default function BoxedCollectible({ collectible, size: [width, height, depth], bodyColor = '#eee9dd', protector = true }: BoxedCollectibleProps) {
   const { image, failed } = useCollectibleArtwork(collectible.imageUrl)
   const crop = collectible.imageCrop
   const texture = useMemo(() => {
@@ -37,19 +39,20 @@ export default function BoxedCollectible({ collectible, size: [width, height, de
   const ratio = image ? image.naturalWidth * (crop?.width ?? 1) / (image.naturalHeight * (crop?.height ?? 1)) : width / height
   const artWidth = Math.min(width - 0.008, (height - 0.008) * ratio)
   const artHeight = Math.min(height - 0.008, (width - 0.008) / ratio)
+  const inset = protector ? 0.006 : 0
 
   return <group position={[0, height / 2, 0]}>
     <mesh castShadow receiveShadow>
-      <boxGeometry args={[width - 0.006, height - 0.006, depth - 0.006]} />
-      <meshStandardMaterial color="#eee9dd" roughness={0.8} />
+      <boxGeometry args={[width - inset, height - inset, depth - inset]} />
+      <meshStandardMaterial color={bodyColor} roughness={0.8} />
     </mesh>
-    <mesh position={[0, 0, depth / 2 - 0.002]}>
+    <mesh position={[0, 0, (depth - inset) / 2 + 0.001]}>
       <planeGeometry args={[artWidth, artHeight]} />
       <meshBasicMaterial map={texture} toneMapped={false} />
     </mesh>
-    <mesh>
+    {protector && <mesh>
       <boxGeometry args={[width, height, depth]} />
       <meshStandardMaterial color="#d3e3df" transparent opacity={0.06} roughness={0.2} depthWrite={false} />
-    </mesh>
+    </mesh>}
   </group>
 }
