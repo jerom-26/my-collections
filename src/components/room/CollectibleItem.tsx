@@ -6,6 +6,9 @@ import { Car } from './Primitives'
 import { palette } from './palette'
 import NftArtwork from './NftArtwork'
 import BoxedCollectible from './BoxedCollectible'
+import { collectiblePresentations } from '../../data/collectiblePresentations'
+import ClamshellCollectible from './ClamshellCollectible'
+import PremiumBoxCollectible from './PremiumBoxCollectible'
 
 export interface CollectibleSelectionProps {
   selectedCollectibleId: string | null
@@ -24,13 +27,16 @@ export function CollectibleItem({ collectible, presentation, scale, selectedColl
 
   const carded = presentation === 'carded'
   const boxed = collectible.representation === 'boxed'
+  const physical = collectiblePresentations[collectible.id]
   const selected = selectedCollectibleId === collectible.id
-  const bounds: [number, number, number] = boxed ? [0.38, 0.52, 0.28] : carded ? [0.37, 0.55, 0.2] : [0.55 * scale, 0.3 * scale, 0.29 * scale]
-  const center: [number, number, number] = boxed ? [0, bounds[1] / 2, 0] : carded ? [0, 0, 0.04] : [0, 0.15 * scale, 0]
+  const bounds: [number, number, number] = physical?.size ?? (boxed ? [0.38, 0.52, 0.28] : carded ? [0.37, 0.55, 0.2] : [0.55 * scale, 0.3 * scale, 0.29 * scale])
+  const center: [number, number, number] = physical || boxed ? [0, bounds[1] / 2, 0] : carded ? [0, 0, 0.04] : [0, 0.15 * scale, 0]
 
   return (
     <group name={`collectible-${collectible.id}`} onClick={(event) => onSelectCollectible(collectible.id, event)}>
-      {boxed ? <BoxedCollectible collectible={collectible} size={bounds} /> : carded && collectible.wax ? <NftArtwork collectible={collectible} /> : carded ? <>
+      {physical?.kind === 'clamshell' ? <ClamshellCollectible collectible={collectible} size={physical.size} />
+        : physical?.kind === 'premium-box' ? <PremiumBoxCollectible collectible={collectible} presentation={physical} />
+        : boxed ? <BoxedCollectible collectible={collectible} size={bounds} /> : carded && collectible.wax ? <NftArtwork collectible={collectible} /> : carded ? <>
         <Artwork kind="card" size={[0.35, 0.53]} />
         <Car position={[0, -0.18, 0.05]} color={collectible.color} scale={scale} />
         <mesh position={[0, -0.11, 0.09]}>

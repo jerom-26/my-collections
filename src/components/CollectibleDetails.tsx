@@ -10,7 +10,7 @@ interface CollectibleDetailsProps {
 function CollectibleDetailsImage({ collectible }: { collectible: Collectible }) {
   const { image, failed } = useCollectibleArtwork(collectible.imageUrl)
   const crop = collectible.imageCrop
-  const alt = `${collectible.name} ${collectible.wax ? 'NFT artwork' : 'product photo'}`
+  const alt = `${collectible.name} ${collectible.artworkStatus === 'temporary' ? 'temporary illustration; owner photo pending' : collectible.wax ? 'NFT artwork' : 'product photo'}`
   const ratio = image && crop ? image.naturalWidth * crop.width / (image.naturalHeight * crop.height) : 1
   return <div className="details-artwork">
     {image ? crop ? <div className="details-photo-crop" style={{ aspectRatio: ratio, width: 180 * ratio }}>
@@ -33,8 +33,12 @@ export default function CollectibleDetails({ collectible, onClose }: Collectible
     ['Mint', nft.mint ? `#${nft.mint}${nft.maxSupply && nft.maxSupply !== '0' ? ` / ${nft.maxSupply}` : ''}` : undefined],
     ['Year released', nft.year], ['Designer', nft.designer], ['Owner', nft.owner],
   ] : [
+    ['Inventory number', collectible.inventoryNumber?.toString()],
+    ['Release year', collectible.releaseYear?.toString()],
     ['Series', collectible.series], ['Box number', collectible.boxNumber],
+    ['Series number', collectible.seriesNumber], ['Appearance', collectible.appearance],
     ['Product number', collectible.productNumber], ['Packaging', collectible.packaging],
+    ['Ownership', collectible.ownership],
   ]
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -53,6 +57,7 @@ export default function CollectibleDetails({ collectible, onClose }: Collectible
       <div aria-live="polite" aria-atomic="true">
         <h2 id="collectible-title">{collectible.name}</h2>
         {(nft || collectible.imageUrl) && <CollectibleDetailsImage key={collectible.id} collectible={collectible} />}
+        {collectible.artworkStatus === 'temporary' && <p className="details-note">Temporary illustration. Original packaging artwork and owner photo are pending.</p>}
         <dl>
           {collectible.manufacturer && <div><dt>Manufacturer</dt><dd>{collectible.manufacturer}</dd></div>}
           <div><dt>Category</dt><dd>{collectible.category.replaceAll('-', ' ')}</dd></div>
