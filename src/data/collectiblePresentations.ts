@@ -8,6 +8,13 @@ export type PhysicalPresentation = {
   readonly kind: 'clamshell'
   readonly size: [number, number, number]
 } | {
+  readonly kind: 'box'
+  readonly size: [number, number, number]
+  readonly bodyColor: string
+  readonly protector: boolean
+  /** Align this box with the shelf surface below the slot's original car anchor. */
+  readonly baseOffset: number
+} | {
   readonly kind: 'premium-box'
   /** Includes the model on top, so picking/highlighting uses the entire item. */
   readonly size: [number, number, number]
@@ -30,5 +37,11 @@ export const collectiblePresentations: Readonly<Partial<Record<string, PhysicalP
     front: [[0.2081, 0.1894], [0.6656, 0.3612], [0.6306, 0.9112], [0.2456, 0.695]],
     right: [[0.6656, 0.3612], [0.825, 0.2412], [0.7738, 0.7831], [0.6306, 0.9112]],
     topModel: 'porsche-911-gt1',
+  },
+  'physical-funko-thor-comic-cover-09': {
+    kind: 'box', size: [0.37, 0.55, 0.23], bodyColor: '#707b77', protector: true, baseOffset: -0.0175,
+  },
+  'physical-brick-shop-cadillac-project-gtp-hypercar': {
+    kind: 'box', size: [0.76, 0.44, 0.22], bodyColor: '#143857', protector: false, baseOffset: -0.0175,
   },
 }

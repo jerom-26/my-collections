@@ -13,7 +13,7 @@ export default function ClamshellCollectible({ collectible, size: [width, height
       <meshStandardMaterial color="#d9d6c5" roughness={0.85} />
     </mesh>
     <group position={[0, 0, -depth / 2 + 0.025]}>
-      <CollectibleArtworkFace imageUrl={collectible.imageUrl} size={[width - 0.024, height - 0.024]} />
+      <CollectibleArtworkFace imageUrl={collectible.imageUrl} crop={collectible.imageCrop} size={[width - 0.024, height - 0.024]} />
     </group>
     <mesh position={[0, -height * 0.23, 0.004]}>
       <boxGeometry args={[width - 0.05, height * 0.27, depth - 0.05]} />

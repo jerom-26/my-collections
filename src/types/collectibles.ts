@@ -13,6 +13,13 @@ export interface Collectible {
   readonly imageCrop?: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }
   readonly representation?: 'boxed'
   readonly series?: string
+  readonly line?: string
+  readonly franchise?: string
+  readonly character?: string
+  readonly comic?: string
+  readonly vehicle?: string
+  readonly pieceCount?: number
+  readonly ageRating?: string
   readonly boxNumber?: string
   readonly productNumber?: string
   readonly packaging?: string

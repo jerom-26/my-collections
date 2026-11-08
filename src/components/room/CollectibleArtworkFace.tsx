@@ -2,15 +2,17 @@ import { useEffect, useMemo } from 'react'
 import { CanvasTexture, PlaneGeometry, SRGBColorSpace, Texture } from 'three'
 import { useCollectibleArtwork } from '../../hooks/useCollectibleArtwork'
 import type { ArtworkQuad } from '../../data/collectiblePresentations'
+import type { Collectible } from '../../types/collectibles'
 
 interface CollectibleArtworkFaceProps {
   imageUrl?: string
   size: [number, number]
   quad?: ArtworkQuad
+  crop?: Collectible['imageCrop']
 }
 
 /** Shared by physical packaging; photographs retain their aspect ratio unless a face is specified. */
-export default function CollectibleArtworkFace({ imageUrl, size: [width, height], quad }: CollectibleArtworkFaceProps) {
+export default function CollectibleArtworkFace({ imageUrl, size: [width, height], quad, crop }: CollectibleArtworkFaceProps) {
   const { image, failed } = useCollectibleArtwork(imageUrl)
   const texture = useMemo(() => {
     let next: Texture
@@ -25,9 +27,13 @@ export default function CollectibleArtworkFace({ imageUrl, size: [width, height]
       next = new CanvasTexture(canvas)
     }
     next.colorSpace = SRGBColorSpace; next.anisotropy = 4; next.needsUpdate = true
+    if (image && crop && !quad) {
+      next.repeat.set(crop.width, crop.height)
+      next.offset.set(crop.left, 1 - crop.top - crop.height)
+    }
     return next
-  }, [image, failed])
-  const ratio = image && !quad ? image.naturalWidth / image.naturalHeight : width / height
+  }, [image, failed, crop, quad])
+  const ratio = image && !quad ? image.naturalWidth * (crop?.width ?? 1) / (image.naturalHeight * (crop?.height ?? 1)) : width / height
   const geometry = useMemo(() => {
     const segments = quad ? 12 : 1
     const next = new PlaneGeometry(Math.min(width, height * ratio), Math.min(height, width / ratio), segments, segments)
