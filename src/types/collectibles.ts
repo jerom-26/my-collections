@@ -16,6 +16,14 @@ export interface Collectible {
   readonly boxNumber?: string
   readonly productNumber?: string
   readonly packaging?: string
+  readonly packagingType?: 'carded-clamshell' | 'collector-box'
+  readonly inventoryNumber?: number
+  readonly releaseYear?: number
+  readonly seriesNumber?: string
+  readonly ownership?: 'Owned'
+  readonly appearance?: string
+  /** Indicates an illustration pending a photograph of the actual packaging. */
+  readonly artworkStatus?: 'temporary'
   readonly modelUrl?: string
   readonly wax?: WaxCollectibleMetadata
 }

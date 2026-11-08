@@ -1,53 +1,92 @@
 # Physical collectibles
 
-Local records live in `src/data/physicalCollectibles.ts` and are combined with
-sample and WAX records in `App`. Records contain no room coordinates. A record
-with `representation: 'boxed'` uses the reusable `BoxedCollectible` renderer;
-cars and NFT cards keep their existing renderers.
+Inventory lives in `src/data/physicalCollectibles.ts`, combined with sample and WAX
+records by the existing `App`. Inventory has no room coordinates. The three Hot
+Wheels records include the owner's inventory number, ownership, packaging type,
+release year and verified product metadata. They have no WAX metadata or API link.
+All 35 original sample records remain available; replaced records are unassigned.
 
-Batman Beyond #458 (Transparent Chase) occupies `cabinet:shelf-4-left`, formerly
-sample-car-07. The sample record is retained but unassigned. Every other display
-assignment and all shelf/room geometry remain unchanged.
+| Cabinet slot | Item | Replaced sample |
+| --- | --- | --- |
+| `cabinet:shelf-4-left` | Batman Beyond #458 Transparent Chase | 07 (previous iteration) |
+| `cabinet:shelf-4-right` | #11 Robert Lewandowski × 1997 Porsche 911 GT1, JWT48 | 08 |
+| `cabinet:shelf-3-left` | #6 Alfa Romeo 155 V6 TI, 2024 Collector Edition, HTF96 | 05 |
+| `cabinet:shelf-3-right` | #40 ’69 Chevelle SS 396, NFT Garage Series 6 #28, HWW87 | 06 |
 
-The box uses a 0.38 × 0.52 × 0.28 scene-unit body and protector, standing upright
-in the cabinet's existing coordinate frame. Its front points along the cabinet's
-local +Z direction, through the glass toward the room. The selection hit box and
-outline match its physical dimensions rather than the old car's dimensions.
+`displayAssignments.ts` contains the placement links. `collectiblePresentations.ts`
+contains packaging renderer choices, dimensions and artwork face coordinates.
+`CollectibleItem` selects those renderers and uses the same dimensions for picking
+and selection outlines. Missing slots/records keep the existing empty-slot behavior.
+Physical packaging is independent of the slot's default loose-car presentation;
+other placeholder cars and WAX artwork keep their existing renderers.
 
-The uploaded JPEG stays unchanged. `imageCrop` selects a normalized rectangle
-from its front face, used consistently by the 3D texture and HTML details image.
-Both preserve the cropped image's aspect ratio. Loading/cancellation and image
-failures use the shared `useCollectibleArtwork` and `collectibleMedia` helpers.
-The box front shows a loading/unavailable label if its photograph cannot load;
-the box remains selectable and the details panel also reports the failure.
+`ClamshellCollectible` renders an upright card with a raised blister and separate
+transparent protective case. It uses inexpensive standard materials and edge
+highlights, without transmission render targets or additional lights. The 0.36 ×
+0.55 × 0.14 scene-unit shell fits below the next shelf with about 0.0375 units of
+clearance. Both cards currently use **owner-approved temporary illustrations**.
+The cards and details panel explicitly mark them as temporary, not original card
+art or product photos. Replace `imageUrl` and remove `artworkStatus: 'temporary'`
+after an authorized photo becomes available; shelf geometry needs no changes.
 
-Product metadata is grounded in the owner's photograph and the official Funko
-listing linked in the asset's README. The visible Chase sticker is preserved;
-the record does not claim an additional retailer-exclusive sticker or a blue
-edition. The photo retains its original lighting, glare and partial hand edge.
+`PremiumBoxCollectible` is an upright 0.38 × 0.48 × 0.28 box. Its front/right faces
+sample only the corresponding quadrilaterals of the supplied Porsche reference,
+using a subdivided plane's UV coordinates. The complete perspective photograph
+is shown in the details panel. Unsupplied faces use solid materials. The box has
+a red top, white front, black sides and a simplified procedural red/white/black
+Porsche with rear wing and number 9 on top. This is a stylized approximation of
+the model, not an exact manufacturer 3D asset. Total height is 0.58, leaving
+about 0.03 units below the existing cabinet roof; front glass clearance is 0.19.
+The car and box share one inventory ID, click target and outline.
 
-No backend, dependencies, character-model framework or additional cabinet is
-introduced. To add another boxed item, add its local record and assign its ID to
-an existing suitable slot. The current box size is intended for standard boxes;
-oversized products need a deliberate fit review.
+`CollectibleArtworkFace` reuses `useCollectibleArtwork` for still-image loading,
+cancellation and failure handling. It releases its textures/geometries on change
+or unmount. Ordinary card artwork retains its aspect ratio. Loading or failed
+images show readable status textures, and the physical object remains selectable.
+No media decoder, model loader, additional dependency or backend is introduced.
 
-Checks: `npm run build`, `npm run lint`, `node --test tests/collectibles.test.mjs`.
+Batman retains its exact existing record, photo crop, slot and `BoxedCollectible`
+renderer. Its 0.38 × 0.52 × 0.28 box, Chase sticker and photo are unchanged.
+The WAX integration, seven poster assets, wall assignments, cabinet/shelf geometry,
+workstation, furniture, lighting and camera/gesture handlers are unchanged.
 
-Changed files: `types/collectibles.ts` adds optional media/product fields;
-`data/physicalCollectibles.ts` supplies the local record; `data/displayAssignments.ts`
-changes one link; `App.tsx` includes physical records. `CollectibleItem.tsx` selects
-the new `BoxedCollectible.tsx` renderer and matching hit bounds. `CollectibleDetails.tsx`
-and two rules in `App.css` show the photo crop and metadata. The existing image hook
-and service were renamed to `useCollectibleArtwork.ts` and `collectibleMedia.ts`;
-`NftArtwork.tsx` only changes that import/call name. Tests, asset provenance and
-the WAX documentation references were updated accordingly.
+Sources and artwork limitations are documented in
+`public/collectibles/physical-hot-wheels/README.md`. No online product photographs
+were downloaded or hotlinked. The supplied Porsche reference is preserved
+unchanged; no general reuse license is claimed.
 
-Browser verification covered the actual cabinet slot, visible photo and Chase
-sticker, neighboring car selection, WAX card selection, camera drag/zoom/reset,
-close/Escape, and a 390×844 mobile viewport with scrolling metadata. The box
-stays inside the cabinet with approximately 0.09 scene units of roof clearance
-and 0.19 units between its front and the glass. Physical touch hardware was not
-available for testing.
-The audit also forced the product photo to fail in a temporary test page: the
-box remained selectable, the details reported unavailable artwork, and restoring
-the normal page loaded the original photo again. The test page was removed.
+Validation:
+
+- `npm run build`, `npm run lint`, `node --test tests/collectibles.test.mjs` (12 tests).
+- Tests check exactly three new physical records, unique IDs, approved placements,
+  retained sample data, unchanged other assignments, local artwork, WAX separation
+  and clearance against the actual shelf/roof/back/glass/frame dimensions.
+- Browser verification: each new item opens its correct panel on desktop and a
+  390 × 844 mobile viewport; product artwork loads; temporary labels are visible;
+  highlighting, close button and Escape work; mobile metadata scrolls and has no
+  horizontal overflow. Batman and a live WAX card remain selectable, with seven
+  WAX cards loaded. Lighting toggle, orbit/zoom/reset work; dragging from a
+  collectible does not open its panel. No console errors were observed.
+- Screenshots: `hot-wheels-cabinet-desktop.jpg`, `hot-wheels-cabinet-mobile.jpg`,
+  `hot-wheels-temporary-artwork-mobile.jpg` in the session visualization directory.
+  Physical touch hardware was not available; mobile testing used a narrow viewport.
+- Build retains the existing large-bundle advisory. Browser logs also include the
+  library's existing Three.Clock deprecation and a graphics-driver precision warning.
+
+Changed or added files for v0.6:
+
+1. `src/types/collectibles.ts`
+2. `src/data/physicalCollectibles.ts`
+3. `src/data/displayAssignments.ts`
+4. `src/data/collectiblePresentations.ts` (new)
+5. `src/components/room/CollectibleItem.tsx`
+6. `src/components/room/ClamshellCollectible.tsx` (new)
+7. `src/components/room/PremiumBoxCollectible.tsx` (new)
+8. `src/components/room/CollectibleArtworkFace.tsx` (new)
+9. `src/components/CollectibleDetails.tsx`
+10. `public/collectibles/physical-hot-wheels/alfa-temporary.svg` (new)
+11. `public/collectibles/physical-hot-wheels/chevelle-temporary.svg` (new)
+12. `public/collectibles/physical-hot-wheels/porsche-reference.png` (new)
+13. `public/collectibles/physical-hot-wheels/README.md` (new)
+14. `tests/collectibles.test.mjs`
+15. `docs/physical-collectibles.md`

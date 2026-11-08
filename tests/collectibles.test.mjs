@@ -5,7 +5,8 @@ import { parseWaxAssets, resolveMediaUrl, fetchWaxCollectibles } from '../src/se
 import { assignWallCollectibles, displayAssignments, resolveDisplayContents } from '../src/data/displayAssignments.ts'
 import { sampleCollectibles } from '../src/data/sampleCollectibles.ts'
 import { physicalCollectibles } from '../src/data/physicalCollectibles.ts'
-import { cardSlots, displaySlots } from '../src/components/room/displayLayout.ts'
+import { cabinetSlots, cabinetShelves, cardSlots, displaySlots } from '../src/components/room/displayLayout.ts'
+import { collectiblePresentations } from '../src/data/collectiblePresentations.ts'
 import { loadStaticArtwork } from '../src/services/collectibleMedia.ts'
 
 // Synthetic parser fixtures are test data, never inventory shown in the room.
@@ -86,9 +87,8 @@ test('assigns only wall slots, keeps 20 other placements and 35 original sample 
   assert.match(broken.issues[0], /Missing collectible/)
 })
 
-test('Batman replaces only the top-left cabinet car and stays independent of WAX', async () => {
+test('Batman keeps its top-left cabinet slot, photo, metadata and renderer', async () => {
   const [batman] = physicalCollectibles
-  assert.equal(physicalCollectibles.length, 1)
   assert.equal(batman.manufacturer, 'Funko')
   assert.equal(batman.boxNumber, '458')
   assert.equal(batman.edition, 'Transparent Chase')
@@ -105,14 +105,74 @@ test('Batman replaces only the top-left cabinet car and stays independent of WAX
   for (const [slot, id] of [
     ['cabinet:shelf-1-left', 'sample-car-01'], ['cabinet:shelf-1-right', 'sample-car-02'],
     ['cabinet:shelf-2-left', 'sample-car-03'], ['cabinet:shelf-2-right', 'sample-car-04'],
-    ['cabinet:shelf-3-left', 'sample-car-05'], ['cabinet:shelf-3-right', 'sample-car-06'],
-    ['cabinet:shelf-4-right', 'sample-car-08'],
   ]) assert.equal(resolved.collectiblesBySlot.get(slot).id, id)
   const crop = batman.imageCrop
   assert.ok(crop.left >= 0 && crop.top >= 0 && crop.width > 0 && crop.height > 0)
   assert.ok(crop.left + crop.width <= 1 && crop.top + crop.height <= 1)
   const bytes = await readFile(new URL('../public' + batman.imageUrl, import.meta.url))
   assert.equal(bytes.readUInt16BE(0), 0xffd8)
+})
+
+test('adds exactly three owned physical Hot Wheels in the approved slots, independent of WAX', async () => {
+  assert.equal(physicalCollectibles.length, 4)
+  const hotWheels = physicalCollectibles.filter(item => item.inventoryNumber !== undefined)
+  assert.deepEqual(hotWheels.map(item => item.inventoryNumber), [6, 40, 11])
+  assert.equal(new Set(physicalCollectibles.map(item => item.id)).size, 4)
+  const resolved = resolveDisplayContents([...sampleCollectibles, ...physicalCollectibles], displayAssignments, displaySlots.map(slot => slot.id))
+  assert.deepEqual(resolved.issues, [])
+  const expected = [
+    ['cabinet:shelf-3-left', 6, 'HTF96', 'clamshell'],
+    ['cabinet:shelf-3-right', 40, 'HWW87', 'clamshell'],
+    ['cabinet:shelf-4-right', 11, 'JWT48', 'premium-box'],
+  ]
+  for (const [slot, inventory, product, kind] of expected) {
+    const item = resolved.collectiblesBySlot.get(slot)
+    assert.equal(item.inventoryNumber, inventory)
+    assert.equal(item.productNumber, product)
+    assert.equal(item.ownership, 'Owned')
+    assert.equal(item.wax, undefined)
+    assert.equal(item.isSample, false)
+    assert.equal(item.representation, undefined)
+    assert.equal(collectiblePresentations[item.id].kind, kind)
+    const bytes = await readFile(new URL('../public' + item.imageUrl, import.meta.url))
+    if (inventory === 11) assert.equal(bytes.readUInt32BE(0), 0x89504e47)
+    else {
+      assert.equal(item.artworkStatus, 'temporary')
+      assert.match(bytes.toString(), /TEMPORARY ARTWORK/)
+      assert.match(bytes.toString(), /Not original card art/)
+    }
+  }
+  for (const id of ['sample-car-05', 'sample-car-06', 'sample-car-08']) {
+    assert.ok(sampleCollectibles.some(item => item.id === id))
+    assert.ok(![...resolved.collectiblesBySlot.values()].some(item => item.id === id))
+  }
+  for (const slot of displaySlots.filter(slot => slot.displayId !== 'cabinet')) {
+    const number = displaySlots.indexOf(slot) + 1
+    assert.equal(displayAssignments[slot.id], `sample-car-${String(number).padStart(2, '0')}`)
+  }
+})
+
+test('physical packaging fits the unchanged cabinet, including the Porsche top model', () => {
+  for (const slot of cabinetSlots) {
+    const config = collectiblePresentations[displayAssignments[slot.id]]
+    if (!config) continue
+    const [width, height, depth] = config.size
+    const [x, y, z] = slot.position
+    const nextShelf = cabinetShelves.find(shelf => shelf.height > y)
+    const ceiling = nextShelf ? nextShelf.height - 0.045 / 2 : 3 - 0.12 / 2
+    assert.ok(y + height < ceiling, `${slot.id}: vertical clearance`)
+    assert.ok(z + depth / 2 < 0.35, `${slot.id}: front glass clearance`)
+    assert.ok(z - depth / 2 > -0.32 + 0.065 / 2, `${slot.id}: back clearance`)
+    assert.ok(Math.abs(x) + width / 2 < 1 - 0.045 / 2, `${slot.id}: side clearance`)
+    assert.ok(Math.abs(x) - width / 2 > 0.045 / 2, `${slot.id}: center frame clearance`)
+    if (config.kind === 'premium-box') {
+      assert.equal(config.topModel, 'porsche-911-gt1')
+      assert.ok(config.boxHeight + 0.0995 <= height)
+      for (const quad of [config.front, config.right]) {
+        for (const point of quad) assert.ok(point.every(value => value >= 0 && value <= 1))
+      }
+    }
+  }
 })
 
 test('bundled artwork references all exist and are JPEGs', async () => {
