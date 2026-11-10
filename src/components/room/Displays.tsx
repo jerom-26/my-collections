@@ -3,7 +3,7 @@ import { Artwork } from './Artwork'
 import { CollectibleItem } from './CollectibleItem'
 import type { CollectibleSelectionProps } from './CollectibleItem'
 import { cabinetShelves, cabinetSlots, cardSlots, modelShelfLevels, modelSlots } from './displayLayout'
-import { Box, Plant } from './Primitives'
+import { Box } from './Primitives'
 import { palette } from './palette'
 
 interface DisplayProps extends CollectibleSelectionProps {
@@ -33,9 +33,6 @@ export function DisplayCabinet({ collectiblesBySlot, ...selection }: DisplayProp
         <mesh position={[x, 1.61, 0.35]}><planeGeometry args={[0.94, 2.69]} /><meshStandardMaterial color="#d5e5d4" transparent opacity={0.075} roughness={0.12} metalness={0.25} depthWrite={false} /></mesh>
         <Box position={[x > 0 ? 0.1 : -0.1, 1.5, 0.39]} size={[0.025, 0.25, 0.035]} color={palette.brass} metalness={0.65} />
       </group>)}
-      <Plant position={[-0.68, 3.07, 0]} scale={0.8} />
-      <Box position={[0.3, 3.13, 0]} size={[0.9, 0.1, 0.43]} color={palette.terracotta} />
-      <Box position={[0.26, 3.23, 0]} size={[0.8, 0.08, 0.4]} color="#d9c59c" />
     </group>
   )
 }
@@ -80,10 +77,6 @@ export function WallDisplays(selection: DisplayProps) {
       <CardedDisplay {...selection} />
       <ModelShelves displayId="back-model-shelves" position={[2.8, 1.91, -3.62]} {...selection} />
       <ModelShelves displayId="left-model-shelves" position={[-3.65, 1.98, -2.35]} rotation={Math.PI / 2} {...selection} />
-      <group position={[-3.865, 2.52, -0.42]} rotation={[0, Math.PI / 2, 0]}>
-        <Box size={[1.28, 1.69, 0.055]} color={palette.ink} />
-        <Artwork kind="poster" size={[1.15, 1.55]} position={[0, 0, 0.032]} />
-      </group>
     </group>
   )
 }

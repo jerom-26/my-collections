@@ -45,18 +45,9 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m20 3 15 8.5v17L20 37 5 28.5v-17L20 3Z" /><path d="m5 11.5 15 9 15-9M20 20.5V37M12.5 7.3l15 8.7v9l-7.5 4.3-7.5-4.3v-9L27.5 7.3" /></svg></span>
           <span>Personal<span> Collectibles</span></span>
         </div>
-        <span className="header-note">Little things. A world of their own.</span>
-        <span className="edition"><i className="status-dot" />Room study / 01</span>
       </header>
 
       <section className="room-viewer" aria-label="Interactive collector’s bedroom">
-        <div className="introduction">
-          <div className="eyebrow">The collector’s room</div>
-          <h1>A little room.<br /> A <em>whole world.</em></h1>
-          <p>A quiet corner for big ideas, small cars, and the things worth keeping.</p>
-          <div className="room-number"><span>001</span><span>Your personal escape</span></div>
-        </div>
-
         <div className="scene" role="region" aria-label="Interactive 3D bedroom. Select a displayed collectible for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
           <SceneBoundary>
             <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 1.75]} frameloop="demand" camera={{ position: [11, 9.4, 12], fov: 37, near: 0.1, far: 250 }} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<SceneFallback />}>
@@ -97,15 +88,8 @@ export default function App() {
 
         {selectedCollectible && <CollectibleDetails collectible={selectedCollectible} onClose={() => setSelectedCollectibleId(null)} />}
 
-        <div className="scene-caption"><span>Room to be yourself.</span><p>A miniature collector’s retreat</p></div>
         <div className="viewer-hint" aria-hidden="true"><svg viewBox="0 0 18 24"><rect x="3" y="1" width="12" height="21" rx="6" /><path d="M9 5v5" /></svg><span className="desktop-hint">Drag to explore</span><i className="divider desktop-hint" /><span>Scroll / pinch to zoom</span></div>
       </section>
-
-      <footer className="room-footer">
-        <div className="footer-label">The everyday, collected.<small>Personal space / Vol. 01</small></div>
-        <div className="room-details"><span><i className="detail-dot" />Diecast & small wonders</span><span><i className="detail-dot" />A place to create</span><span><i className="detail-dot" />Designed to unwind</span></div>
-        <span className="footer-index">01 — 01</span>
-      </footer>
     </main>
   )
 }
