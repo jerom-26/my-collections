@@ -119,7 +119,7 @@ export default function RoomScene({ evening, resetKey, selectedCollectibleId, on
 
   return (
     <>
-      <color attach="background" args={['#da9921']} />
+      <color attach="background" args={['#202b35']} />
       <Lighting evening={evening} />
       <ArtworkProvider>
         <Room />
