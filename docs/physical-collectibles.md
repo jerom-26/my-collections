@@ -74,8 +74,10 @@ or unmount. Ordinary card artwork retains its aspect ratio. Loading or failed
 images show readable status textures, and the physical object remains selectable.
 No media decoder, model loader, additional dependency or backend is introduced.
 
-Batman retains its exact existing record, photo crop, slot and `BoxedCollectible`
-renderer. Its 0.38 × 0.52 × 0.28 box, Chase sticker and photo are unchanged.
+Batman uses the owner's replacement photograph supplied on 2026-11-17, with an
+updated crop shared by the scene and details panel. Its existing record, slot,
+`BoxedCollectible` renderer and 0.38 × 0.52 × 0.28 box remain unchanged. The photo
+shows the yellow Limited Chase Edition sticker only.
 The WAX integration, seven poster assets, wall assignments, cabinet/shelf geometry,
 workstation, furniture, lighting and camera/gesture handlers are unchanged.
 

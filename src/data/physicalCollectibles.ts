@@ -14,7 +14,7 @@ export const physicalCollectibles: readonly Collectible[] = [{
   isSample: false,
   imageUrl: '/collectibles/batman-beyond-458/owner-photo.jpg',
   // Frame the original box front without retouching its labels or sticker.
-  imageCrop: { left: 0.231, top: 0.086, width: 0.607, height: 0.628 },
+  imageCrop: { left: 0.115, top: 0.043, width: 0.71, height: 0.867 },
 }, {
   id: 'physical-hot-wheels-alfa-romeo-155-v6-ti-2024',
   inventoryNumber: 6,
