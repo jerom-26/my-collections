@@ -62,6 +62,7 @@ export default function CollectibleDetails({ collectible, onClose }: Collectible
         <h2 id="collectible-title">{collectible.name}</h2>
         {(nft || collectible.imageUrl) && <CollectibleDetailsImage key={collectible.id} collectible={collectible} />}
         {collectible.artworkStatus === 'temporary' && <p className="details-note">Temporary illustration. Original packaging artwork and owner photo are pending.</p>}
+        {collectible.artworkStatus === 'reference' && <p className="details-note">Product reference photo. The exact variant in your collection is unconfirmed.</p>}
         <dl>
           {collectible.manufacturer && <div><dt>Manufacturer</dt><dd>{collectible.manufacturer}</dd></div>}
           <div><dt>Category</dt><dd>{collectible.category.replaceAll('-', ' ')}</dd></div>

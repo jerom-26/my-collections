@@ -29,8 +29,8 @@ export interface Collectible {
   readonly seriesNumber?: string
   readonly ownership?: 'Owned'
   readonly appearance?: string
-  /** Indicates an illustration pending a photograph of the actual packaging. */
-  readonly artworkStatus?: 'temporary'
+  /** Distinguishes illustrations and product references from photos of the owned item. */
+  readonly artworkStatus?: 'temporary' | 'reference'
   readonly modelUrl?: string
   readonly wax?: WaxCollectibleMetadata
 }
