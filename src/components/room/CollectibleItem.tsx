@@ -7,8 +7,10 @@ import { palette } from './palette'
 import NftArtwork from './NftArtwork'
 import BoxedCollectible from './BoxedCollectible'
 import { collectiblePresentations } from '../../data/collectiblePresentations'
+import type { PhysicalPresentation } from '../../data/collectiblePresentations'
 import ClamshellCollectible from './ClamshellCollectible'
 import PremiumBoxCollectible from './PremiumBoxCollectible'
+import LooseShelfCar from './LooseShelfCar'
 
 export interface CollectibleSelectionProps {
   selectedCollectibleId: string | null
@@ -21,6 +23,20 @@ interface CollectibleItemProps extends CollectibleSelectionProps {
   scale: number
 }
 
+function PhysicalCollectible({ collectible, presentation }: { collectible: Collectible; presentation: PhysicalPresentation }) {
+  switch (presentation.kind) {
+    case 'loose-car':
+      return <LooseShelfCar presentation={presentation} />
+    case 'clamshell':
+    case 'blister':
+      return <ClamshellCollectible collectible={collectible} size={presentation.size} protector={presentation.kind === 'clamshell'} />
+    case 'premium-box':
+      return <PremiumBoxCollectible collectible={collectible} presentation={presentation} />
+    case 'box':
+      return <BoxedCollectible collectible={collectible} size={presentation.size} bodyColor={presentation.bodyColor} protector={presentation.protector} />
+  }
+}
+
 /** Rendering only: records and assignments are supplied by the display composition. */
 export function CollectibleItem({ collectible, presentation, scale, selectedCollectibleId, onSelectCollectible }: CollectibleItemProps) {
   if (!collectible) return null
@@ -28,16 +44,16 @@ export function CollectibleItem({ collectible, presentation, scale, selectedColl
   const carded = presentation === 'carded'
   const boxed = collectible.representation === 'boxed'
   const physical = collectiblePresentations[collectible.id]
-  const baseOffset = physical?.kind === 'box' ? physical.baseOffset : 0
+  const baseOffset = physical && 'baseOffset' in physical ? physical.baseOffset : 0
   const selected = selectedCollectibleId === collectible.id
   const bounds: [number, number, number] = physical?.size ?? (boxed ? [0.38, 0.52, 0.28] : carded ? [0.37, 0.55, 0.2] : [0.55 * scale, 0.3 * scale, 0.29 * scale])
   const center: [number, number, number] = physical || boxed ? [0, bounds[1] / 2 + baseOffset, 0] : carded ? [0, 0, 0.04] : [0, 0.15 * scale, 0]
 
   return (
     <group name={`collectible-${collectible.id}`} onClick={(event) => onSelectCollectible(collectible.id, event)}>
-      {physical?.kind === 'clamshell' ? <ClamshellCollectible collectible={collectible} size={physical.size} />
-        : physical?.kind === 'premium-box' ? <PremiumBoxCollectible collectible={collectible} presentation={physical} />
-        : physical?.kind === 'box' ? <group position={[0, baseOffset, 0]}><BoxedCollectible collectible={collectible} size={physical.size} bodyColor={physical.bodyColor} protector={physical.protector} /></group>
+      {physical ? <group position={[0, baseOffset, 0]}>
+        <PhysicalCollectible collectible={collectible} presentation={physical} />
+      </group>
         : boxed ? <BoxedCollectible collectible={collectible} size={bounds} /> : carded && collectible.wax ? <NftArtwork collectible={collectible} /> : carded ? <>
         <Artwork kind="card" size={[0.35, 0.53]} />
         <Car position={[0, -0.18, 0.05]} color={collectible.color} scale={scale} />

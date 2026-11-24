@@ -5,7 +5,7 @@ import { parseWaxAssets, resolveMediaUrl, fetchWaxCollectibles } from '../src/se
 import { assignWallCollectibles, displayAssignments, resolveDisplayContents } from '../src/data/displayAssignments.ts'
 import { sampleCollectibles } from '../src/data/sampleCollectibles.ts'
 import { physicalCollectibles } from '../src/data/physicalCollectibles.ts'
-import { cabinetSlots, cabinetShelves, cardSlots, displaySlots } from '../src/components/room/displayLayout.ts'
+import { cabinetSlots, cabinetShelves, cardSlots, displaySlots, modelSlots, modelShelfLevels } from '../src/components/room/displayLayout.ts'
 import { collectiblePresentations } from '../src/data/collectiblePresentations.ts'
 import { loadStaticArtwork } from '../src/services/collectibleMedia.ts'
 
@@ -112,11 +112,8 @@ test('Batman keeps its top-left cabinet slot, photo, metadata and renderer', asy
   assert.equal(bytes.readUInt16BE(0), 0xffd8)
 })
 
-test('adds exactly three owned physical Hot Wheels in the approved slots, independent of WAX', async () => {
-  assert.equal(physicalCollectibles.length, 6)
-  const hotWheels = physicalCollectibles.filter(item => item.inventoryNumber !== undefined)
-  assert.deepEqual(hotWheels.map(item => item.inventoryNumber), [6, 40, 11])
-  assert.equal(new Set(physicalCollectibles.map(item => item.id)).size, 6)
+test('retains the three original physical Hot Wheels in the approved cabinet slots', async () => {
+  assert.equal(new Set(physicalCollectibles.map(item => item.id)).size, physicalCollectibles.length)
   const resolved = resolveDisplayContents([...sampleCollectibles, ...physicalCollectibles], displayAssignments, displaySlots.map(slot => slot.id))
   assert.deepEqual(resolved.issues, [])
   const expected = [
@@ -148,9 +145,84 @@ test('adds exactly three owned physical Hot Wheels in the approved slots, indepe
     assert.ok(sampleCollectibles.some(item => item.id === id))
     assert.ok(![...resolved.collectiblesBySlot.values()].some(item => item.id === id))
   }
-  for (const slot of displaySlots.filter(slot => slot.displayId !== 'cabinet')) {
-    const number = displaySlots.indexOf(slot) + 1
-    assert.equal(displayAssignments[slot.id], `sample-car-${String(number).padStart(2, '0')}`)
+  cardSlots.forEach((slot, index) => {
+    assert.equal(displayAssignments[slot.id], `sample-car-${String(index + 9).padStart(2, '0')}`)
+  })
+})
+
+test('places the eight loose cars and four blister cards in their wall-shelf slots with clearance', async () => {
+  const expected = {
+    'left-model-shelves:shelf-3-left': ['Custom ’71 Datsun 240Z', 27],
+    'left-model-shelves:shelf-3-right': ['’70 Plymouth AAR ’Cuda', 29],
+    'left-model-shelves:shelf-2-left': ['Ford Shelby GT350R', 14],
+    'left-model-shelves:shelf-2-right': ['Custom ’68 Camaro', 28],
+    'left-model-shelves:shelf-1-left': ['Land Rover Defender 110', 15],
+    'left-model-shelves:shelf-1-right': ['Corvette Stingray', 7],
+    'back-model-shelves:shelf-3-left': ['Ain’t Fare', 32],
+    'back-model-shelves:shelf-3-right': ['Mattel Dream Mobile', 18],
+    'back-model-shelves:shelf-2-left': ['Ferrari F40 Competizione', 5, 'blister'],
+    'back-model-shelves:shelf-2-right': ['Lamborghini Veneno', 1, 'blister'],
+    'back-model-shelves:shelf-1-left': ['BMW M4 GT3', 3, 'blister'],
+    'back-model-shelves:shelf-1-right': ['Nissan Skyline GT-R (BNR34)', 4, 'blister'],
+  }
+  const suppliedPhotos = {
+    1: '01-lamborghini-veneno-photo.webp',
+    3: '03-bmw-m4-gt3-photo.jpg',
+    4: '04-nissan-skyline-bnr34-photo.jpg',
+    5: '05-ferrari-f40-competizione-photo.webp',
+    7: '07-corvette-stingray-photo.jpg',
+    14: '14-ford-shelby-gt350r-photo.webp',
+    15: '15-land-rover-defender-110-photo.jpg',
+    18: '18-mattel-dream-mobile-photo.jpg',
+    27: '27-custom-71-datsun-240z-photo.webp',
+    28: '28-custom-68-camaro-photo.jpg',
+    29: '29-plymouth-aar-cuda-photo.jpg',
+    32: '32-aint-fare-photo.webp',
+  }
+  const fullCardPhotoRatios = { 1: 657 / 1000, 5: 1488 / 1500 }
+  const resolved = resolveDisplayContents([...sampleCollectibles, ...physicalCollectibles], displayAssignments, displaySlots.map(slot => slot.id))
+  assert.deepEqual(resolved.issues, [])
+  assert.equal(modelSlots.length, Object.keys(expected).length)
+  for (const slot of modelSlots) {
+    const [name, number, kind = 'loose-car'] = expected[slot.id]
+    const item = resolved.collectiblesBySlot.get(slot.id)
+    const config = collectiblePresentations[item.id]
+    assert.equal(item.name, name)
+    assert.equal(item.inventoryNumber, number)
+    assert.equal(item.ownership, 'Owned')
+    assert.equal(item.wax, undefined)
+    assert.equal(item.isSample, false)
+    assert.equal(config.kind, kind)
+    assert.equal(item.packaging, kind === 'blister' ? 'Blister-packed' : 'Opened / loose')
+    const [x, y, z] = slot.position
+    const [width, height, depth] = config.size
+    const base = y + config.baseOffset
+    const shelf = modelShelfLevels.findLast(level => level.height < y)
+    const nextShelf = modelShelfLevels.find(level => level.height > y)
+    assert.ok(Math.abs(base - (shelf.height + 0.075 / 2)) < 1e-8, `${slot.id}: rests on shelf`)
+    if (nextShelf) assert.ok(base + height < nextShelf.height - 0.075 / 2, `${slot.id}: overhead clearance`)
+    assert.ok(Math.abs(x) + width / 2 < 1.75 / 2, `${slot.id}: side clearance`)
+    assert.ok(Math.abs(z) + depth / 2 < 0.41 / 2, `${slot.id}: depth clearance`)
+    const suppliedPhoto = suppliedPhotos[number]
+    assert.equal(item.imageUrl, '/collectibles/wall-shelves/' + suppliedPhoto)
+    assert.equal(item.artworkStatus, undefined)
+    const image = await readFile(new URL('../public' + item.imageUrl, import.meta.url))
+    if (suppliedPhoto.endsWith('.webp')) {
+      assert.equal(image.toString('ascii', 0, 4), 'RIFF')
+      assert.equal(image.toString('ascii', 8, 12), 'WEBP')
+    } else {
+      assert.equal(image.readUInt16BE(0), 0xffd8)
+    }
+    const crop = item.imageCrop
+    if (crop) {
+      assert.ok(crop.left >= 0 && crop.top >= 0 && crop.width > 0 && crop.height > 0)
+      assert.ok(crop.left + crop.width <= 1 && crop.top + crop.height <= 1)
+    }
+    if (kind === 'blister') {
+      // The cropped BMW and Nissan photos both have square source frames.
+      const photoRatio = crop ? crop.width / crop.height : fullCardPhotoRatios[number]
+      assert.ok(Math.abs(width / height - photoRatio) < 0.002)
+    }
   }
 })
 

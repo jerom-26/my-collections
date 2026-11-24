@@ -1,4 +1,5 @@
 import type { Collectible } from '../types/collectibles'
+import { wallShelfCollectibles } from './wallShelfCollectibles.ts'
 
 export const physicalCollectibles: readonly Collectible[] = [{
   id: 'physical-batman-beyond-458-chase',
@@ -95,4 +96,4 @@ export const physicalCollectibles: readonly Collectible[] = [{
   isSample: false,
   imageUrl: '/collectibles/cadillac-project-gtp-hypercar/product-reference.png',
   imageCrop: { left: 0.05, top: 0.239, width: 0.90, height: 0.524 },
-}]
+}, ...wallShelfCollectibles]
