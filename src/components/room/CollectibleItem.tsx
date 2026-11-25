@@ -63,7 +63,7 @@ export function CollectibleItem({ collectible, presentation, scale, selectedColl
         </mesh>
       </> : <Car color={collectible.color} scale={scale} />}
       {/* Invisible pick geometry remains raycastable without adding visible clutter. */}
-      <mesh position={center} visible={false}>
+      <mesh name="collectible-hitbox" position={center} visible={false}>
         <boxGeometry args={bounds} />
         <meshBasicMaterial />
       </mesh>
