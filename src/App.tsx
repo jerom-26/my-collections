@@ -1,8 +1,9 @@
-import { Component, useEffect, useMemo, useState } from 'react'
+import { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { PCFShadowMap } from 'three'
 import RoomScene from './components/room/RoomScene'
+import type { CameraCommand } from './components/room/CameraRig'
 import CollectibleDetails from './components/CollectibleDetails'
 import { sampleCollectibles } from './data/sampleCollectibles'
 import { physicalCollectibles } from './data/physicalCollectibles'
@@ -23,9 +24,17 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
 
 export default function App() {
   const [evening, setEvening] = useState(true)
-  const [resetKey, setResetKey] = useState(0)
+  const [cameraCommand, setCameraCommand] = useState<CameraCommand | null>(null)
+  const [focusedId, setFocusedId] = useState<string | null>(null)
+  const [cameraMessage, setCameraMessage] = useState<string | null>(null)
   const [showHelp, setShowHelp] = useState(false)
   const [selectedCollectibleId, setSelectedCollectibleId] = useState<string | null>(null)
+  const sceneRegion = useRef<HTMLDivElement>(null)
+  const closeDetails = useCallback(() => {
+    setSelectedCollectibleId(null)
+    setCameraMessage(null)
+    sceneRegion.current?.focus({ preventScroll: true })
+  }, [])
   const wax = useWaxCollectibles()
   const { records, collectiblesBySlot, issues } = useMemo(() => {
     const records = [...sampleCollectibles, ...physicalCollectibles, ...wax.collectibles]
@@ -47,11 +56,13 @@ export default function App() {
         </div>
       </header>
 
-      <section className="room-viewer" aria-label="Interactive collector’s bedroom">
-        <div className="scene" role="region" aria-label="Interactive 3D bedroom. Select a displayed collectible for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
+      <section className={`room-viewer${selectedCollectible ? ' has-details' : ''}`} aria-label="Interactive collector’s bedroom">
+        <div className="viewer-stage">
+        <div ref={sceneRegion} tabIndex={-1} className="scene" role="region" aria-label="Interactive 3D bedroom. Select a displayed collectible for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
           <SceneBoundary>
             <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 1.75]} frameloop="demand" camera={{ position: [11, 9.4, 12], fov: 37, near: 0.1, far: 250 }} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<SceneFallback />}>
-              <RoomScene collectiblesBySlot={collectiblesBySlot} evening={evening} resetKey={resetKey} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={setSelectedCollectibleId} />
+              <RoomScene collectiblesBySlot={collectiblesBySlot} evening={evening} command={cameraCommand} onFocusedChange={setFocusedId} onCameraMessage={setCameraMessage}
+                selectedCollectibleId={selectedCollectibleId} onSelectCollectible={(id) => { setSelectedCollectibleId(id); setCameraMessage(null) }} />
             </Canvas>
           </SceneBoundary>
         </div>
@@ -64,13 +75,17 @@ export default function App() {
         </div>
 
         <div className="viewer-tools" aria-label="Room controls">
+          {focusedId && <button type="button" className="tool-button return-button" onClick={() => {
+            setCameraCommand({ kind: 'back' })
+            sceneRegion.current?.focus({ preventScroll: true })
+          }}>Back to Room</button>}
           <button className="tool-button" onClick={() => setEvening((value) => !value)} aria-pressed={evening} aria-label="Warm evening lighting">
             {evening
               ? <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.7 12.4A7.4 7.4 0 0 1 7.6 3.3a7.4 7.4 0 1 0 9.1 9.1Z" /></svg>
               : <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.3" /><path d="M10 1v2m0 14v2M1 10h2m14 0h2M3.6 3.6 5 5m10 10 1.4 1.4M3.6 16.4 5 15M15 5l1.4-1.4" /></svg>}
             {evening ? 'Warm evening' : 'Soft daylight'}
           </button>
-          <button className="tool-button icon-button" onClick={() => setResetKey((value) => value + 1)} aria-label="Reset camera" title="Reset camera">
+          <button className="tool-button icon-button" onClick={() => setCameraCommand({ kind: 'reset' })} aria-label="Reset camera" title="Reset camera">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7a6.7 6.7 0 1 1-.4 5M4 2.8V7h4.2" /></svg>
           </button>
           <button className="tool-button icon-button" onClick={() => setShowHelp((value) => !value)} aria-label="Camera controls help" aria-expanded={showHelp} aria-controls="camera-help" title="Camera controls">
@@ -83,12 +98,14 @@ export default function App() {
           <p>Drag to look around. Scroll to zoom. Right-drag or Shift-drag to pan.</p>
           <p>On touch screens, drag with one finger to rotate. Pinch or use two fingers to zoom and pan.</p>
           <p>Use the reset button to return to this view.</p>
-          <p>Click or tap a displayed collectible for details. Close the details to keep exploring.</p>
+          <p>Click or tap a collectible for details. Choose View Closer for a close-up, then Back to Room to return.</p>
         </aside>
 
-        {selectedCollectible && <CollectibleDetails collectible={selectedCollectible} onClose={() => setSelectedCollectibleId(null)} />}
-
+        {cameraMessage && <p className="camera-message" role="status">{cameraMessage}</p>}
         <div className="viewer-hint" aria-hidden="true"><svg viewBox="0 0 18 24"><rect x="3" y="1" width="12" height="21" rx="6" /><path d="M9 5v5" /></svg><span className="desktop-hint">Drag to explore</span><i className="divider desktop-hint" /><span>Scroll / pinch to zoom</span></div>
+        </div>
+        {selectedCollectible && <CollectibleDetails collectible={selectedCollectible} onClose={closeDetails} isFocused={focusedId === selectedCollectible.id}
+          onFocus={() => setCameraCommand({ kind: 'focus', id: selectedCollectible.id })} />}
       </section>
     </main>
   )
