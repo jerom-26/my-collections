@@ -15,6 +15,18 @@
 .viewer-tools { position: absolute; top: 14px; right: 14px; left: 14px; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; z-index: 3; }
 .tool-button { height: 39px; padding: 0 13px; border: 1px solid #c8c2b4; color: var(--green); background: #f5f0e6dd; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-size: 11px; transition: background 150ms, border-color 150ms; }
 .tool-button:hover { background: #fcf7ec; border-color: #6e7b64; }
+.theme-select { width: 153px; padding-inline: 9px 7px; }
+.showroom[data-theme="dark-gaming"] { background: #171d29; color: #e7e7ef; --line: #626d835f; }
+[data-theme="dark-gaming"] .brand-mark { color: #a2b3d7; }
+[data-theme="dark-gaming"] .room-viewer { background: #111726; }
+[data-theme="dark-gaming"] .tool-button,
+[data-theme="dark-gaming"] .wax-status { background: #232c3e; color: #edf0f8; border-color: #535f77; color-scheme: dark; }
+[data-theme="dark-gaming"] .tool-button:hover { background: #344159; border-color: #8595b7; }
+[data-theme="dark-gaming"] .tool-button:focus-visible,
+[data-theme="dark-gaming"] .wax-status button:focus-visible { outline-color: #bbcafa; }
+[data-theme="dark-gaming"] .collectible-details,
+[data-theme="dark-gaming"] .help-card,
+[data-theme="dark-gaming"] .camera-message { color: #303c34; --line: #bcb9a760; }
 .tool-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .icon-button { width: 39px; padding: 0; }
 .tool-button:focus-visible, .help-close:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
@@ -74,8 +86,9 @@
   .details-note { margin-top: 12px; padding-top: 10px; }
   .showroom { padding: 0 10px; } .topbar { height: 74px; } .brand { font-size: 15px; gap: 7px; } .brand-mark { width: 30px; } .brand-mark svg { width: 30px; }
   .room-viewer { min-height: 460px; height: calc(100svh - 74px); max-height: 920px; }
-  .viewer-tools { top: 10px; right: 10px; left: 10px; } .help-card { top: 58px; right: 10px; }
+  .viewer-tools { top: 10px; right: 10px; left: 10px; gap: 6px; } .help-card { top: 58px; right: 10px; }
   .tool-button { min-height: 42px; }
+  .theme-select { width: 145px; }
   .viewer-hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .tool-button { transition: none; } }

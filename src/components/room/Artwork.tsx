@@ -3,15 +3,22 @@ import type { ReactNode } from 'react'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 import type { ThreeElements } from '@react-three/fiber'
 
-type ArtworkKind = 'screen' | 'poster' | 'sign' | 'card' | 'rug' | 'wood'
+type ArtworkKind = 'screen' | 'poster' | 'sign' | 'card' | 'rug' | 'wood' | 'glow'
 
 function paint(kind: ArtworkKind) {
   const canvas = document.createElement('canvas')
-  canvas.width = 1024
-  canvas.height = kind === 'sign' ? 256 : 768
+  canvas.width = kind === 'glow' ? 64 : 1024
+  canvas.height = kind === 'glow' ? 64 : kind === 'sign' ? 256 : 768
   const ctx = canvas.getContext('2d')!
   const { width: w, height: h } = canvas
-  if (kind === 'screen') {
+  if (kind === 'glow') {
+    const glow = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2)
+    glow.addColorStop(0, '#fff')
+    glow.addColorStop(0.45, '#ffffff9e')
+    glow.addColorStop(1, '#ffffff00')
+    ctx.fillStyle = glow
+    ctx.fillRect(0, 0, w, h)
+  } else if (kind === 'screen') {
     const sky = ctx.createLinearGradient(0, 0, 0, h)
     sky.addColorStop(0, '#202d54'); sky.addColorStop(0.52, '#cd9c8e'); sky.addColorStop(1, '#e1b583')
     ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h)
@@ -71,13 +78,13 @@ const ArtworkContext = createContext<Partial<Record<ArtworkKind, CanvasTexture>>
 
 export function ArtworkProvider({ children }: { children: ReactNode }) {
   const textures = useMemo(() => Object.fromEntries(
-    (['screen', 'poster', 'sign', 'card', 'rug', 'wood'] as const).map((kind) => [kind, paint(kind)]),
+    (['screen', 'poster', 'sign', 'card', 'rug', 'wood', 'glow'] as const).map((kind) => [kind, paint(kind)]),
   ), [])
   useEffect(() => () => Object.values(textures).forEach((texture) => texture.dispose()), [textures])
   return <ArtworkContext.Provider value={textures}>{children}</ArtworkContext.Provider>
 }
 
-export function Artwork({ kind, size, ...props }: ThreeElements['mesh'] & { kind: ArtworkKind; size: [number, number] }) {
+export function Artwork({ kind, size, ...props }: ThreeElements['mesh'] & { kind: Exclude<ArtworkKind, 'glow'>; size: [number, number] }) {
   const textures = useContext(ArtworkContext)
   return (
     <mesh receiveShadow={kind === 'wood' || kind === 'rug'} {...props}>
@@ -87,4 +94,13 @@ export function Artwork({ kind, size, ...props }: ThreeElements['mesh'] & { kind
         : <meshStandardMaterial map={textures[kind]} roughness={0.95} transparent={kind === 'wood'} depthWrite={kind !== 'wood'} />}
     </mesh>
   )
+}
+
+/** Soft light spill on a nearby surface using the room's shared gradient texture. */
+export function LightWash({ size, color, opacity, ...props }: Omit<ThreeElements['mesh'], 'args'> & { size: [number, number]; color: string; opacity: number }) {
+  const { glow } = useContext(ArtworkContext)
+  return <mesh {...props} raycast={() => null}>
+    <planeGeometry args={size} />
+    <meshBasicMaterial map={glow} color={color} opacity={opacity} transparent toneMapped={false} depthWrite={false} />
+  </mesh>
 }

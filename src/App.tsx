@@ -4,6 +4,8 @@ import { Canvas } from '@react-three/fiber'
 import { PCFShadowMap } from 'three'
 import RoomScene from './components/room/RoomScene'
 import type { CameraCommand } from './components/room/CameraRig'
+import { lightingThemes, roomThemeOptions } from './components/room/roomThemes'
+import type { RoomTheme } from './components/room/roomThemes'
 import CollectibleDetails from './components/CollectibleDetails'
 import { sampleCollectibles } from './data/sampleCollectibles'
 import { physicalCollectibles } from './data/physicalCollectibles'
@@ -23,7 +25,7 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
 }
 
 export default function App() {
-  const [evening, setEvening] = useState(true)
+  const [roomTheme, setRoomTheme] = useState<RoomTheme>('warm-evening')
   const [cameraCommand, setCameraCommand] = useState<CameraCommand | null>(null)
   const [focusedId, setFocusedId] = useState<string | null>(null)
   const [cameraMessage, setCameraMessage] = useState<string | null>(null)
@@ -48,7 +50,7 @@ export default function App() {
   const selectedCollectible = records.find((record) => record.id === selectedCollectibleId)
 
   return (
-    <main className="showroom">
+    <main className="showroom" data-theme={roomTheme}>
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m20 3 15 8.5v17L20 37 5 28.5v-17L20 3Z" /><path d="m5 11.5 15 9 15-9M20 20.5V37M12.5 7.3l15 8.7v9l-7.5 4.3-7.5-4.3v-9L27.5 7.3" /></svg></span>
@@ -61,7 +63,7 @@ export default function App() {
         <div ref={sceneRegion} tabIndex={-1} className="scene" role="region" aria-label="Interactive 3D bedroom. Select a displayed collectible for details. Drag to orbit, scroll to zoom, right-drag to pan." aria-describedby="camera-help">
           <SceneBoundary>
             <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 1.75]} frameloop="demand" camera={{ position: [11, 9.4, 12], fov: 37, near: 0.1, far: 250 }} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<SceneFallback />}>
-              <RoomScene collectiblesBySlot={collectiblesBySlot} evening={evening} command={cameraCommand} onFocusedChange={setFocusedId} onCameraMessage={setCameraMessage}
+              <RoomScene collectiblesBySlot={collectiblesBySlot} theme={roomTheme} command={cameraCommand} onFocusedChange={setFocusedId} onCameraMessage={setCameraMessage}
                 selectedCollectibleId={selectedCollectibleId} onSelectCollectible={(id) => { setSelectedCollectibleId(id); setCameraMessage(null) }} />
             </Canvas>
           </SceneBoundary>
@@ -79,12 +81,9 @@ export default function App() {
             setCameraCommand({ kind: 'back' })
             sceneRegion.current?.focus({ preventScroll: true })
           }}>Back to Room</button>}
-          <button className="tool-button" onClick={() => setEvening((value) => !value)} aria-pressed={evening} aria-label="Warm evening lighting">
-            {evening
-              ? <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.7 12.4A7.4 7.4 0 0 1 7.6 3.3a7.4 7.4 0 1 0 9.1 9.1Z" /></svg>
-              : <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.3" /><path d="M10 1v2m0 14v2M1 10h2m14 0h2M3.6 3.6 5 5m10 10 1.4 1.4M3.6 16.4 5 15M15 5l1.4-1.4" /></svg>}
-            {evening ? 'Warm evening' : 'Soft daylight'}
-          </button>
+          <select className="tool-button theme-select" aria-label="Room lighting theme" value={roomTheme} onChange={(event) => setRoomTheme(event.currentTarget.value as RoomTheme)}>
+            {roomThemeOptions.map((theme) => <option key={theme} value={theme}>{lightingThemes[theme].label}</option>)}
+          </select>
           <button className="tool-button icon-button" onClick={() => setCameraCommand({ kind: 'reset' })} aria-label="Reset camera" title="Reset camera">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7a6.7 6.7 0 1 1-.4 5M4 2.8V7h4.2" /></svg>
           </button>
