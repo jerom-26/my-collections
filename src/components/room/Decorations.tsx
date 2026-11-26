@@ -1,20 +1,24 @@
 import { Artwork } from './Artwork'
 import { Box } from './Primitives'
 import { palette } from './palette'
+import { lightingThemes, nightPalette } from './roomThemes'
+import type { RoomTheme } from './roomThemes'
 
-export default function Decorations({ evening }: { evening: boolean }) {
+export default function Decorations({ theme }: { theme: RoomTheme }) {
+  const { lampGlow, bedside } = lightingThemes[theme]
+  const night = theme === 'dark-gaming'
   return (
     <group>
       <Box position={[-1.24, 0.045, 0.92]} size={[2.65, 0.035, 3.34]} color="#485c60" />
       <Artwork kind="rug" size={[2.6, 3.28]} position={[-1.24, 0.066, 0.92]} rotation={[-Math.PI / 2, 0, 0]} />
       <group position={[3.55, 0, -1.48]}>
-        <Box position={[0, 0.39, 0]} size={[0.62, 0.76, 0.62]} color={palette.darkWood} />
-        <Box position={[0, 0.79, 0]} size={[0.69, 0.08, 0.69]} color={palette.wood} />
+        <Box position={[0, 0.39, 0]} size={[0.62, 0.76, 0.62]} color={night ? nightPalette.darkWood : palette.darkWood} />
+        <Box position={[0, 0.79, 0]} size={[0.69, 0.08, 0.69]} color={night ? nightPalette.wood : palette.wood} />
         <Box position={[0, 0.42, 0.316]} size={[0.47, 0.46, 0.018]} color="#3d4037" />
         {['#b9bdab', '#d3ac76', '#8a9c98'].map((color, i) => <Box key={color} position={[-0.01, 0.25 + i * 0.075, 0.27]} size={[0.37 - i * 0.035, 0.055, 0.2]} color={color} />)}
         <mesh position={[0, 0.865, 0]} castShadow><cylinderGeometry args={[0.16, 0.2, 0.06, 20]} /><meshStandardMaterial color={palette.brass} metalness={0.6} roughness={0.4} /></mesh>
-        <mesh position={[0, 1.065, 0]} castShadow><sphereGeometry args={[0.21, 20, 16]} /><meshStandardMaterial color="#ffe6b2" emissive="#ffc678" emissiveIntensity={evening ? 1.9 : 0.5} roughness={0.6} /></mesh>
-        <pointLight position={[0, 1.25, 0]} intensity={evening ? 4 : 0.7} color="#ffbd71" distance={3.5} decay={2} />
+        <mesh position={[0, 1.065, 0]} castShadow><sphereGeometry args={[0.21, 20, 16]} /><meshStandardMaterial color="#ffe6b2" emissive="#ffc678" emissiveIntensity={lampGlow} roughness={0.6} /></mesh>
+        <pointLight position={[0, 1.25, 0]} intensity={bedside} color="#ffbd71" distance={3.5} decay={2} />
       </group>
       <group position={[2.84, 3.53, -3.85]}>
         <Box size={[1.76, 0.25, 0.04]} color="#e3d8bf" />

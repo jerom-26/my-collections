@@ -1,7 +1,8 @@
 import { RoundedBox } from '@react-three/drei'
-import { Artwork } from './Artwork'
+import { Artwork, LightWash } from './Artwork'
 import { Box, Car, Plant } from './Primitives'
 import { palette } from './palette'
+import { nightPalette } from './roomThemes'
 
 function Chair() {
   return (
@@ -22,11 +23,18 @@ function Chair() {
   )
 }
 
-export default function Workstation() {
+export default function Workstation({ night }: { night: boolean }) {
+  const wood = night ? nightPalette.wood : palette.wood
   return (
     <group>
-      <Box position={[-1.55, 1.12, -3.25]} size={[3.75, 0.13, 1.05]} color={palette.wood} />
-      <Box position={[-3.05, 1.12, -2.23]} size={[0.75, 0.13, 1]} color={palette.wood} />
+      <Box position={[-1.55, 1.12, -3.25]} size={[3.75, 0.13, 1.05]} color={wood} />
+      <Box position={[-3.05, 1.12, -2.23]} size={[0.75, 0.13, 1]} color={wood} />
+      {night && <>
+        <LightWash position={[-1.56, 1.88, -3.897]} size={[3.05, 1.68]} color={nightPalette.monitor} opacity={0.56} />
+        <LightWash position={[-1.45, 0.031, -2.91]} rotation={[-Math.PI / 2, 0, 0]} size={[2.55, 1.38]} color={nightPalette.underDesk} opacity={0.23} />
+        <pointLight position={[-1.5, 1.55, -3.03]} color={nightPalette.monitor} intensity={1.45} distance={1.85} />
+        <Box position={[-1.45, 1.05, -3.49]} size={[2.17, 0.013, 0.018]} color={nightPalette.underDesk} glow={0.6} castShadow={false} />
+      </>}
       <Box position={[-2.95, 0.55, -3.25]} size={[0.66, 1.04, 0.85]} color="#4b5047" />
       {[0.3, 0.62, 0.94].map((y) => <group key={y}>
         <Box position={[-2.95, y, -2.812]} size={[0.59, 0.27, 0.025]} color="#555a51" />
@@ -37,7 +45,7 @@ export default function Workstation() {
       <Box position={[-0.15, 0.51, -3.26]} size={[0.49, 0.96, 0.78]} color={palette.ink} />
       <Box position={[-0.15, 0.53, -2.857]} size={[0.4, 0.82, 0.025]} color="#182a30" />
       {[0.3, 0.66].map((y) => <mesh key={y} position={[-0.15, y, -2.835]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.12, 0.014, 6, 24]} /><meshStandardMaterial color="#dca16e" emissive="#db9457" emissiveIntensity={1.1} />
+        <torusGeometry args={[0.12, 0.014, 6, 24]} /><meshStandardMaterial color={night ? nightPalette.underDesk : '#dca16e'} emissive={night ? nightPalette.underDesk : '#db9457'} emissiveIntensity={night ? 0.48 : 1.1} />
       </mesh>)}
       <Box position={[-1.55, 1.205, -3.35]} size={[0.58, 0.045, 0.33]} color={palette.ink} />
       <Box position={[-1.55, 1.44, -3.48]} size={[0.08, 0.46, 0.07]} color={palette.ink} />
@@ -45,7 +53,7 @@ export default function Workstation() {
       <Artwork kind="screen" size={[1.76, 0.8]} position={[-1.55, 1.84, -3.44]} />
       <Box position={[-1.47, 1.204, -2.97]} size={[1.59, 0.018, 0.43]} color="#394c4d" />
       <Box position={[-1.62, 1.23, -2.99]} size={[0.92, 0.045, 0.28]} color="#202e32" />
-      {Array.from({ length: 4 }, (_, row) => Array.from({ length: 12 }, (_, col) => <Box key={`${row}-${col}`} position={[-2.02 + col * 0.073, 1.257, -3.08 + row * 0.06]} size={[0.05, 0.008, 0.038]} color={(col + row) % 7 === 0 ? '#d8b77d' : '#86938e'} />))}
+      {Array.from({ length: 4 }, (_, row) => Array.from({ length: 12 }, (_, col) => <Box key={`${row}-${col}`} position={[-2.02 + col * 0.073, 1.257, -3.08 + row * 0.06]} size={[0.05, 0.008, 0.038]} color={night ? nightPalette.keyGlow : (col + row) % 7 === 0 ? '#d8b77d' : '#86938e'} glow={night ? 0.38 : 0} />))}
       <mesh position={[-0.95, 1.25, -2.97]} scale={[0.065, 0.035, 0.1]} castShadow><sphereGeometry args={[1, 12, 8]} /><meshStandardMaterial color="#c1b89f" /></mesh>
       <group position={[-2.93, 1.21, -2.02]} rotation={[0, Math.PI / 3, 0]}>
         <Box size={[0.69, 0.035, 0.48]} color="#9fa6a0" />

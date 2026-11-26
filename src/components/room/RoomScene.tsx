@@ -12,21 +12,23 @@ import Room from './Room'
 import Workstation from './Workstation'
 import CameraRig from './CameraRig'
 import type { CameraRigProps } from './CameraRig'
+import type { RoomTheme } from './roomThemes'
 import type { Collectible, DisplaySlotId } from '../../types/collectibles'
 
 interface RoomSceneProps extends CameraRigProps {
   collectiblesBySlot: ReadonlyMap<DisplaySlotId, Collectible>
-  evening: boolean
+  theme: RoomTheme
   selectedCollectibleId: string | null
   onSelectCollectible: (id: string) => void
 }
 
-export default function RoomScene({ evening, selectedCollectibleId, onSelectCollectible, collectiblesBySlot, ...cameraRig }: RoomSceneProps) {
+export default function RoomScene({ theme, selectedCollectibleId, onSelectCollectible, collectiblesBySlot, ...cameraRig }: RoomSceneProps) {
   const canvas = useThree((state) => state.gl.domElement)
   const scene = useThree((state) => state.scene)
   const camera = useThree((state) => state.camera)
   const pickingRay = useRef(new Raycaster())
   const gesture = useRef({ pointerId: -1, x: 0, y: 0, blocked: true, clickReady: false })
+  const night = theme === 'dark-gaming'
 
   useEffect(() => {
     const pointers = new Set<number>()
@@ -101,15 +103,14 @@ export default function RoomScene({ evening, selectedCollectibleId, onSelectColl
 
   return (
     <>
-      <color attach="background" args={['#202b35']} />
-      <Lighting evening={evening} />
+      <Lighting theme={theme} />
       <ArtworkProvider>
-        <Room />
-        <Bed />
-        <Workstation />
-        <DisplayCabinet evening={evening} collectiblesBySlot={collectiblesBySlot} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={selectCollectible} />
-        <WallDisplays evening={evening} collectiblesBySlot={collectiblesBySlot} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={selectCollectible} />
-        <Decorations evening={evening} />
+        <Room night={night} />
+        <Bed night={night} />
+        <Workstation night={night} />
+        <DisplayCabinet theme={theme} collectiblesBySlot={collectiblesBySlot} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={selectCollectible} />
+        <WallDisplays theme={theme} collectiblesBySlot={collectiblesBySlot} selectedCollectibleId={selectedCollectibleId} onSelectCollectible={selectCollectible} />
+        <Decorations theme={theme} />
         <ContactShadows position={[0, 0.026, 0]} scale={12} far={4.5} opacity={0.38} blur={2} resolution={512} frames={1} color="#554332" />
       </ArtworkProvider>
       <CameraRig {...cameraRig} />
